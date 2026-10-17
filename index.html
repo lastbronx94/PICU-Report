@@ -174,6 +174,10 @@
     /* ===== Report history ===== */
     #btnHistory { background: var(--green); }
     #btnHistory:hover { background: var(--green-dark); }
+    .opt { font-weight: 400; color: var(--muted); font-size: 12px; }
+    .missing-note { background: var(--amber-soft); color: #7a4a0c; border-bottom: 1px solid #f3d9a4; padding: 10px 14px; font-size: 13px; }
+    #reportOutput:not([readonly]) { background: #fffef7; }
+    #btnSave:disabled { opacity: .55; cursor: not-allowed; }
     .save-status { font-size: 13px; margin-top: 10px; min-height: 1em; color: var(--muted); }
     .save-status.ok { color: var(--green); font-weight: 600; }
     .save-status.err { color: var(--red); font-weight: 600; }
@@ -327,15 +331,51 @@
         <input id="ptAge" placeholder="مثال: 4 سنوات / 6 أشهر">
       </div>
     </div>
+    <div class="row">
+      <div class="field">
+        <label for="ptWeight">الوزن <span class="opt">(اختياري)</span></label>
+        <input id="ptWeight" placeholder="مثال: 16 كجم">
+      </div>
+      <div class="field">
+        <label for="ptAdmission">تاريخ دخول الرعاية / مدة الإقامة <span class="opt">(اختياري)</span></label>
+        <input id="ptAdmission" placeholder="مثال: منذ 12 يوم">
+      </div>
+    </div>
 
-    <div class="section-head"><span class="num">2</span> الحالة الإكلينيكية والعلاج</div>
+    <div class="section-head"><span class="num">2</span> الحالة الإكلينيكية</div>
     <div class="field">
       <label for="ptHistory">التاريخ المرضي والتشخيص الإكلينيكي</label>
       <textarea id="ptHistory" rows="3" placeholder="مثال: Severe Persistent Asthma, Pediatric ARDS..."></textarea>
     </div>
     <div class="field">
-      <label for="ptDrug">العلاج الدوائي المطلوب والمبرر</label>
-      <textarea id="ptDrug" rows="2" placeholder="اسم الدواء، الجرعة المقترحة، والمبرر الطبي"></textarea>
+      <label for="ptSupport">الدعم التنفسي الحالي <span class="opt">(اختياري)</span></label>
+      <select id="ptSupport">
+        <option value="">— لم يُحدد —</option>
+        <option value="Room air">Room air</option>
+        <option value="Nasal cannula / Face mask O2">Nasal cannula / Face mask O2</option>
+        <option value="High-flow nasal cannula (HFNC)">High-flow nasal cannula (HFNC)</option>
+        <option value="Non-invasive ventilation (CPAP / BiPAP)">Non-invasive ventilation (CPAP / BiPAP)</option>
+        <option value="Invasive mechanical ventilation">Invasive mechanical ventilation</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="ptLabs">أهم التحاليل والأشعة <span class="opt">(اختياري)</span></label>
+      <textarea id="ptLabs" rows="2" placeholder="مثال: ABG: pH 7.28, PaCO2 58 — CXR: bilateral infiltrates — IgE 450"></textarea>
+    </div>
+
+    <div class="section-head"><span class="num">3</span> العلاج المطلوب</div>
+    <div class="field">
+      <label for="ptPrevTx">العلاجات السابقة وعدم الاستجابة لها <span class="opt">(اختياري — يقوّي الطلب)</span></label>
+      <textarea id="ptPrevTx" rows="2" placeholder="مثال: High-dose ICS + LABA لمدة 6 أشهر بدون تحسن، 3 دخولات رعاية خلال سنة"></textarea>
+    </div>
+    <div class="field">
+      <label for="ptDrug">الدواء المطلوب والمبرر الطبي</label>
+      <textarea id="ptDrug" rows="2" placeholder="اسم الدواء والمبرر الطبي لاستخدامه"></textarea>
+    </div>
+    <div class="field">
+      <label for="ptDose">الجرعة، عدد المرات، ومدة العلاج <span class="opt">(اختياري)</span></label>
+      <input id="ptDose" placeholder="مثال: 150 mg SC كل 4 أسابيع لمدة 6 أشهر">
+      <div class="hint">تُكتب الجرعة في التقرير كما أدخلتها تماماً — لا يقوم الذكاء الاصطناعي بحسابها أو تعديلها.</div>
     </div>
 
     <details class="settings" id="aiSettings">
@@ -362,8 +402,16 @@
         </strong>
         <button id="btnCopy" class="btn-ghost btn-sm">نسخ التقرير</button>
       </div>
+      <div id="missingNote" class="missing-note hidden">
+        ⚠️ يوجد بيانات ناقصة مكتوبة بين أقواس <b>[يُستكمل: ...]</b> — يرجى استكمالها أو حذفها قبل الحفظ.
+      </div>
       <textarea id="reportOutput" rows="10" readonly placeholder="سيظهر التقرير الطبي هنا بعد التوليد..."></textarea>
     </div>
+    <div class="hint" id="reviewHint" style="margin-top:8px">راجع التقرير وعدّله إذا لزم الأمر، ثم اضغط "حفظ في السجل". لا يمكن تعديل التقرير بعد حفظه.</div>
+    <button id="btnSave" class="btn-lg" style="margin-top:12px" disabled>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/></svg>
+      <span>حفظ في السجل</span>
+    </button>
     <div id="saveStatus" class="save-status"></div>
   </section>
 
@@ -553,6 +601,13 @@
       btnHistory.classList.add("hidden");
       currentProfile = null;
       allReports = [];
+      // مسح بيانات المريض والتقرير عند تغيير المستخدم (خصوصية الأجهزة المشتركة)
+      ["ptName", "ptAge", "ptWeight", "ptAdmission", "ptHistory", "ptSupport", "ptLabs", "ptPrevTx", "ptDrug", "ptDose", "reportOutput"]
+        .forEach((id) => { document.getElementById(id).value = ""; });
+      document.getElementById("reportOutput").readOnly = true;
+      document.getElementById("btnSave").disabled = true;
+      document.getElementById("missingNote").classList.add("hidden");
+      saveStatus.textContent = "";
 
       if (!user) {
         authBox.classList.remove("hidden");
@@ -609,6 +664,11 @@
     async function saveReport(r) {
       saveStatus.className = "save-status";
       saveStatus.textContent = "جاري حفظ التقرير في السجل...";
+      if (!auth.currentUser) {
+        saveStatus.className = "save-status err";
+        saveStatus.textContent = "انتهت الجلسة — يرجى تسجيل الدخول مرة أخرى ثم الحفظ.";
+        return false;
+      }
       try {
         await addDoc(collection(db, "reports"), {
           ...r,
@@ -620,10 +680,12 @@
         });
         saveStatus.className = "save-status ok";
         saveStatus.textContent = "✓ تم حفظ التقرير في السجل";
+        return true;
       } catch (err) {
         console.error(err);
         saveStatus.className = "save-status err";
         saveStatus.textContent = "لم يتم حفظ التقرير في السجل: " + explainError(err);
+        return false;
       }
     }
 
@@ -635,7 +697,7 @@
     function renderHistory() {
       const listEl = document.getElementById("historyList");
       const q = document.getElementById("historySearch").value.trim().toLowerCase();
-      const items = allReports.filter((r) => !q || [r.patientName, r.doctorName, r.history, r.drug]
+      const items = allReports.filter((r) => !q || [r.patientName, r.doctorName, r.history, r.drug, r.labs, r.prevTx]
         .some((v) => String(v || "").toLowerCase().includes(q)));
 
       document.getElementById("historyCount").textContent = q
@@ -656,8 +718,16 @@
           </summary>
           <div class="h-body">
             <div class="h-facts">
-              <div><b>التشخيص:</b> ${esc(r.history)}</div>
-              <div><b>العلاج المطلوب:</b> ${esc(r.drug)}</div>
+              ${[
+                ["الوزن", r.weight],
+                ["دخول الرعاية / المدة", r.admission],
+                ["التشخيص", r.history],
+                ["الدعم التنفسي", r.support],
+                ["التحاليل والأشعة", r.labs],
+                ["العلاجات السابقة", r.prevTx],
+                ["العلاج المطلوب", r.drug],
+                ["الجرعة والمدة", r.dose]
+              ].filter(([, v]) => v).map(([k, v]) => `<div><b>${k}:</b> ${esc(v)}</div>`).join("")}
             </div>
             <div class="h-text">${esc(r.reportText)}</div>
             <div class="h-actions">
@@ -775,16 +845,74 @@
     };
 
     // توليد التقرير الطبي
-    document.getElementById("btnGenerate").onclick = async () => {
-      const ptName = document.getElementById("ptName").value.trim();
-      const ptAge = document.getElementById("ptAge").value.trim();
-      const ptHistory = document.getElementById("ptHistory").value.trim();
-      const ptDrug = document.getElementById("ptDrug").value.trim();
-      const apiKey = document.getElementById("geminiKey").value.trim();
-      const output = document.getElementById("reportOutput");
+    const val = (id) => document.getElementById(id).value.trim();
+    const output = document.getElementById("reportOutput");
+    const btnSave = document.getElementById("btnSave");
+    const missingNote = document.getElementById("missingNote");
+    let pendingReport = null; // بيانات آخر تقرير تم توليده ولم يُحفظ بعد
 
-      if (!ptName || !ptAge || !ptHistory || !ptDrug) {
-        alert("يرجى ملء جميع بيانات المريض والدواء المطلوب.");
+    function updateMissingNote() {
+      missingNote.classList.toggle("hidden", !/\[\s*يُ?ستكمل/.test(output.value));
+    }
+    output.addEventListener("input", updateMissingNote);
+
+    function buildPrompt(c) {
+      const lines = [
+        `- اسم المريض: ${c.patientName}`,
+        `- السن: ${c.patientAge}`,
+        c.weight && `- الوزن: ${c.weight}`,
+        c.admission && `- دخول الرعاية المركزة / مدة الإقامة: ${c.admission}`,
+        `- التشخيص والتاريخ المرضي: ${c.history}`,
+        c.support && `- الدعم التنفسي الحالي: ${c.support}`,
+        c.labs && `- أهم التحاليل والأشعة: ${c.labs}`,
+        c.prevTx && `- العلاجات السابقة وعدم الاستجابة لها: ${c.prevTx}`,
+        `- الدواء المطلوب والمبرر الطبي: ${c.drug}`,
+        c.dose && `- الجرعة وعدد المرات ومدة العلاج (كما كتبها الطبيب): ${c.dose}`
+      ].filter(Boolean).join("\n");
+
+      const signer = currentProfile && currentProfile.position !== "الإدارة"
+        ? `${currentProfile.fullName} — ${currentProfile.position}`
+        : "[اسم الطبيب المعالج ودرجته]";
+
+      return `أنت استشاري رعاية مركزة للأطفال. اكتب تقريراً طبياً رسمياً باللغة العربية موجهاً إلى السادة رئيس وأعضاء اللجنة الطبية بالتأمين الصحي، بأسلوب طبي وأكاديمي رصين ومقنع، لطلب الموافقة على صرف العلاج المطلوب.
+
+قواعد صارمة يجب الالتزام بها:
+1. استخدم فقط المعلومات الواردة في "بيانات الحالة" أدناه. ممنوع اختراع أي نتائج تحاليل أو علامات حيوية أو تواريخ أو أعداد دخول أو علاجات سابقة أو مضاعفات غير مذكورة.
+2. إذا كانت هناك معلومة مهمة لتقوية الطلب وغير متوفرة، لا تخمّنها؛ اكتب مكانها بين قوسين مربعين بهذا الشكل: [يُستكمل: وصف المعلومة الناقصة].
+3. اكتب الجرعة وعدد المرات والمدة حرفياً كما كتبها الطبيب، ولا تحسب أو تعدّل أو تقترح أي جرعة. إذا لم تُذكر الجرعة اكتب: [يُستكمل: الجرعة وعدد المرات ومدة العلاج].
+4. لا تذكر أسماء مراجع أو دراسات أو أرقام توصيات بعينها. يمكنك فقط الإشارة بشكل عام إلى "الإرشادات العلمية المعتمدة".
+5. اكتب التشخيصات وأسماء الأدوية والمصطلحات الطبية بالإنجليزية كما وردت في البيانات.
+6. التزم بهذا الترتيب:
+   - الديباجة الرسمية والتحية.
+   - بيانات المريض.
+   - الملخص الإكلينيكي وخطورة الحالة.
+   - مبررات طلب العلاج (مع ذكر العلاجات السابقة وعدم الاستجابة لها إن وُجدت في البيانات).
+   - التوصية الصريحة بالعلاج المطلوب مع الجرعة والمدة.
+   - الختام: "وتفضلوا بقبول فائق الاحترام والتقدير" ثم سطر "الطبيب المعالج: ${signer}" ثم سطر "التوقيع: ............".
+7. اكتب التقرير مباشرة بدون أي مقدمة أو تعليق أو ملاحظات منك خارج نص التقرير، وبدون استخدام رموز Markdown مثل ** أو #.
+
+بيانات الحالة:
+${lines}`;
+    }
+
+    // توليد التقرير الطبي
+    document.getElementById("btnGenerate").onclick = async () => {
+      const c = {
+        patientName: val("ptName"),
+        patientAge: val("ptAge"),
+        weight: val("ptWeight"),
+        admission: val("ptAdmission"),
+        history: val("ptHistory"),
+        support: val("ptSupport"),
+        labs: val("ptLabs"),
+        prevTx: val("ptPrevTx"),
+        drug: val("ptDrug"),
+        dose: val("ptDose")
+      };
+      const apiKey = val("geminiKey");
+
+      if (!c.patientName || !c.patientAge || !c.history || !c.drug) {
+        alert("يرجى ملء الحقول الأساسية: اسم المريض، السن، التشخيص، والدواء المطلوب.");
         return;
       }
       if (!apiKey) {
@@ -796,6 +924,10 @@
 
       localStorage.setItem("picu_gemini_key", apiKey);
       output.value = "جاري صياغة التقرير الطبي للتأمين الصحي بالذكاء الاصطناعي...";
+      output.readOnly = true;
+      pendingReport = null;
+      btnSave.disabled = true;
+      missingNote.classList.add("hidden");
       saveStatus.className = "save-status";
       saveStatus.textContent = "";
 
@@ -804,29 +936,28 @@
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span><span>جاري إعداد التقرير...</span>';
 
-      const promptText = `أنت طبيب رعاية مركزة للأطفال استشاري خبير. اكتب تقريراً طبياً رسمياً باللغة العربية موجهاً إلى (السادة رئيس وأعضاء اللجنة الطبية بالتأمين الصحي) بأسلوب طبي وأكاديمي رصين ومقنع للموافقة على صرف الدواء المطلوب.
-البيانات:
-- اسم المريض: ${ptName}
-- السن: ${ptAge}
-- التشخيص والتاريخ المرضي للرعاية: ${ptHistory}
-- الدواء المطلوب ومبرر الاستخدام: ${ptDrug}
-
-اكتب التقرير مباشرة متضمناً الديباجة الرسمية، التقييم الإكلينيكي وحرج الحالة، والتوصية الصريحة بالعلاج.`;
-
       try {
         // gemini-1.5-flash تم إيقافه من Google، لذلك نستخدم أحدث نسخة Flash تلقائياً
         const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent", {
           method: "POST",
           headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: promptText }] }]
+            contents: [{ parts: [{ text: buildPrompt(c) }] }],
+            // حرارة منخفضة = التزام أكبر بالبيانات وصياغة أكثر ثباتاً
+            generationConfig: { temperature: 0.3 }
           })
         });
 
         const data = await res.json();
-        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-          output.value = data.candidates[0].content.parts[0].text;
-          await saveReport({ patientName: ptName, patientAge: ptAge, history: ptHistory, drug: ptDrug, reportText: output.value });
+        const parts = data.candidates?.[0]?.content?.parts || [];
+        const text = parts.filter((p) => p.text && !p.thought).map((p) => p.text).join("").trim();
+        if (text) {
+          output.value = text;
+          output.readOnly = false;
+          pendingReport = c;
+          btnSave.disabled = false;
+          updateMissingNote();
+          saveStatus.textContent = "راجع التقرير قبل الحفظ.";
         } else {
           output.value = "حدث خطأ في الرد من API:\n" + JSON.stringify(data);
         }
@@ -835,6 +966,22 @@
       } finally {
         btn.disabled = false;
         btn.innerHTML = btnHtml;
+      }
+    };
+
+    // حفظ التقرير (بعد المراجعة والتعديل) في السجل
+    btnSave.onclick = async () => {
+      if (!pendingReport || !output.value.trim()) return;
+      if (/\[\s*يُ?ستكمل/.test(output.value) &&
+          !confirm("التقرير ما زال يحتوي على بيانات ناقصة [يُستكمل: ...]. هل تريد الحفظ على أي حال؟")) return;
+
+      btnSave.disabled = true;
+      const ok = await saveReport({ ...pendingReport, reportText: output.value.trim() });
+      if (ok) {
+        pendingReport = null;
+        output.readOnly = true;
+      } else {
+        btnSave.disabled = false;
       }
     };
 
