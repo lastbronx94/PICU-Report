@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>كتابة تقارير الرعاية المركزة الاطفال</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 520px; margin: auto; padding: 15px; direction: rtl; background: #f8fafc; color: #1e293b; }
+    .header-logos { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .header-logos img { height: 65px; max-width: 48%; object-fit: contain; }
+    h3 { text-align: center; color: #1d4ed8; margin: 8px 0 16px; font-size: 1.25rem; }
+    .box { background: #fff; border: 1px solid #cbd5e1; padding: 16px; margin-bottom: 14px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .hidden { display: none !important; }
+    label { font-size: 13px; font-weight: bold; margin-top: 8px; display: block; color: #334155; }
+    input, select, textarea, button { width: 100%; padding: 9px 11px; margin: 5px 0 10px; border: 1px solid #94a3b8; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+    textarea { resize: vertical; }
+    button { background: #2563eb; color: #fff; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
+    button:hover { background: #1d4ed8; }
+    .btn-secondary { background: #475569; }
+    .btn-secondary:hover { background: #334155; }
+    .btn-success { background: #16a34a; }
+    .btn-success:hover { background: #15803d; }
+    .user-card { border-bottom: 1px solid #e2e8f0; padding: 10px 0; display: flex; justify-content: space-between; align-items: center; }
+    footer { text-align: center; font-size: 13px; margin-top: 25px; color: #64748b; }
+    footer a { color: #16a34a; text-decoration: none; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <!-- ترويسة الشعارات -->
+  <div class="header-logos">
+    <img src="picu-logo.jpeg" alt="Pediatric ICU Logo" onerror="this.outerHTML='<div style=\'font-weight:bold;color:#b91c1c;\'>Pediatric ICU</div>'">
+    <img src="hospital-logo.jpeg" alt="Children Hospital Logo" onerror="this.outerHTML='<div style=\'font-weight:bold;color:#1e3a8a;\'>Children Hospital</div>'">
+  </div>
+
+  <h3>كتابة تقارير الرعاية المركزة الاطفال</h3>
+
+  <!-- شاشة التسجيل والدخول -->
+  <div id="authBox" class="box">
+    <h4 style="margin: 0 0 10px; color: #1e3a8a;">تسجيل حساب طبيب جديد</h4>
+    <input id="regName" placeholder="الاسم بالإنجليزية (مثال: Ahmed Mohamed)">
+    <select id="regPos">
+      <option value="طبيب مقيم">طبيب مقيم</option>
+      <option value="مدرس مساعد">مدرس مساعد</option>
+      <option value="مدرس">مدرس</option>
+      <option value="استاذ مساعد">استاذ مساعد</option>
+      <option value="استاذ">استاذ</option>
+    </select>
+    <input id="regMobile" type="tel" placeholder="رقم الموبايل">
+    <button id="btnRegister">تسجيل الحساب</button>
+
+    <hr style="margin: 15px 0; border: 0; border-top: 1px solid #e2e8f0;">
+
+    <h4 style="margin: 0 0 10px; color: #1e3a8a;">تسجيل الدخول</h4>
+    <input id="loginEmail" placeholder="البريد الإلكتروني">
+    <input id="loginPass" type="password" placeholder="كلمة المرور">
+    <button id="btnLogin" class="btn-secondary">دخول</button>
+  </div>
+
+  <!-- شاشة الانتظار والمراجعة -->
+  <div id="pendingBox" class="box hidden" style="text-align: center; border-color: #f59e0b; background: #fffbeb;">
+    <h4 style="color: #b45309; margin-top: 0;">الحساب قيد المراجعة</h4>
+    <p>تم استلام بياناتك بنجاح. يرجى انتظار تفعيل حسابك من قبل إدارة الرعاية لتتمكن من استخدام المنظومة.</p>
+    <button id="btnSignOutPending" class="btn-secondary" style="width: auto; padding: 6px 14px;">تسجيل الخروج</button>
+  </div>
+
+  <!-- لوحة الإدارة (Admin Dashboard) -->
+  <div id="adminBox" class="box hidden" style="border-color: #2563eb;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <h4 style="margin: 0; color: #1e3a8a;">لوحة إدارة المستخدمين</h4>
+      <button id="btnSwitchToApp" style="width: auto; padding: 4px 10px; font-size: 12px;">شاشة التقارير</button>
+    </div>
+    <div id="usersList">جاري تحميل قائمة الأطباء...</div>
+  </div>
+
+  <!-- الشاشة الرئيسية: كتابة التقارير -->
+  <div id="mainBox" class="box hidden">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <span id="userBadge" style="font-size: 12px; color: #475569; font-weight: bold;"></span>
+      <div>
+        <button id="btnAdminPanel" class="hidden" style="width: auto; padding: 4px 10px; font-size: 12px; background: #0284c7;">لوحة الإدارة</button>
+        <button id="btnSignOut" class="btn-secondary" style="width: auto; padding: 4px 10px; font-size: 12px;">خروج</button>
+      </div>
+    </div>
+
+    <label>اسم المريض:</label>
+    <input id="ptName" placeholder="الاسم رباعي">
+
+    <label>السن:</label>
+    <input id="ptAge" placeholder="مثال: 4 سنوات / 6 أشهر">
+
+    <label>التاريخ المرضي والتشخيص الإكلينيكي:</label>
+    <textarea id="ptHistory" rows="3" placeholder="مثال: Severe Persistent Asthma, Pediatric ARDS..."></textarea>
+
+    <label>العلاج الدوائي المطلوب والمبرر:</label>
+    <input id="ptDrug" placeholder="اسم الدواء، الجرعة المقترحة، والمبرر الطبي">
+
+    <label>Gemini API Key:</label>
+    <input id="geminiKey" type="password" placeholder="أدخل مفتاح Gemini هنا">
+
+    <button id="btnGenerate" class="btn-success">توليد تقرير التأمين الصحي</button>
+
+    <label>صيغة التقرير المعتمدة:</label>
+    <textarea id="reportOutput" rows="7" readonly placeholder="سيظهر التقرير الطبي هنا..."></textarea>
+    <button id="btnCopy" class="btn-secondary">نسخ التقرير</button>
+  </div>
+
+  <!-- تذييل الصفحة -->
+  <footer>
+    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-bottom: 12px;">
+    <div style="margin-bottom: 6px;">
+      <img src="signature.jpeg" alt="Dr. Mohamed Akram Fekry" style="max-height: 40px; object-fit: contain;" onerror="this.outerHTML='<span style=\'font-weight:bold;\'>د. محمد أكرم فكري</span>'">
+    </div>
+    <div>
+      للتواصل والدعم: 
+      <a href="https://wa.me/201210366210" target="_blank" rel="noopener">واتساب: +201210366210</a>
+    </div>
+  </footer>
+
+  <!-- الأكواد البرمجية والربط مع Firebase و Gemini -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getAuth, 
+      signInWithEmailAndPassword, 
+      createUserWithEmailAndPassword, 
+      signOut, 
+      onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { 
+      getFirestore, 
+      doc, 
+      setDoc, 
+      getDoc, 
+      collection, 
+      getDocs, 
+      updateDoc, 
+      deleteDoc 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // إعدادات Firebase الخاصة بمشروعك
+    const firebaseConfig = {
+      apiKey: "AIzaSyBR-ylz9teo-psBPG-NEshhGyozitEB58g",
+      authDomain: "picu-report.firebaseapp.com",
+      projectId: "picu-report",
+      storageBucket: "picu-report.firebasestorage.app",
+      messagingSenderId: "279946812428",
+      appId: "1:279946812428:web:a82e3a130a22dc3383e229"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const ADMIN_EMAIL = "admin@picu.com";
+
+    // عناصر الواجهة
+    const authBox = document.getElementById("authBox");
+    const pendingBox = document.getElementById("pendingBox");
+    const adminBox = document.getElementById("adminBox");
+    const mainBox = document.getElementById("mainBox");
+    const userBadge = document.getElementById("userBadge");
+    const btnAdminPanel = document.getElementById("btnAdminPanel");
+
+    // استرجاع مفتاح Gemini إن وجد
+    const savedGeminiKey = localStorage.getItem("picu_gemini_key");
+    if (savedGeminiKey) document.getElementById("geminiKey").value = savedGeminiKey;
+
+    // رسائل خطأ مفهومة بدلاً من أكواد Firebase
+    function explainError(err) {
+      const code = err && err.code ? err.code : "";
+      const map = {
+        "auth/email-already-in-use": "هذا الاسم مسجل بالفعل. سجّل الدخول به أو أضف حرفاً/رقماً للاسم.",
+        "auth/invalid-email": "البريد الإلكتروني غير صحيح.",
+        "auth/weak-password": "كلمة المرور ضعيفة (6 أحرف على الأقل).",
+        "auth/invalid-credential": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+        "auth/wrong-password": "كلمة المرور غير صحيحة.",
+        "auth/user-not-found": "لا يوجد حساب بهذا البريد.",
+        "auth/too-many-requests": "محاولات كثيرة، حاول بعد قليل.",
+        "auth/network-request-failed": "تعذر الاتصال بالإنترنت.",
+        "auth/operation-not-allowed": "تسجيل الدخول بالبريد وكلمة المرور غير مفعل في Firebase Console.",
+        "auth/configuration-not-found": "خدمة Authentication غير مفعلة في Firebase Console.",
+        "permission-denied": "قواعد Firestore تمنع العملية (Firestore Rules)."
+      };
+      return (map[code] || err.message) + (code ? `\n(${code})` : "");
+    }
+
+    function esc(s) {
+      return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    // تسجيل طبيب جديد
+    document.getElementById("btnRegister").onclick = async () => {
+      const rawName = document.getElementById("regName").value.trim();
+      const pos = document.getElementById("regPos").value;
+      const mobile = document.getElementById("regMobile").value.trim();
+
+      if (!rawName || !mobile) {
+        alert("يرجى إدخال الاسم بالإنجليزية ورقم الموبايل.");
+        return;
+      }
+
+      const cleanName = rawName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (cleanName.length < 3) {
+        alert("يرجى كتابة الاسم بحروف إنجليزية (3 حروف على الأقل)، مثال: Ahmed Mohamed");
+        return;
+      }
+      const email = `${cleanName}@picu.com`;
+      const pass = `${cleanName}123`;
+
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        await setDoc(doc(db, "users", cred.user.uid), {
+          fullName: rawName,
+          position: pos,
+          mobile: mobile,
+          email: email,
+          isApproved: false,
+          createdAt: new Date().toISOString()
+        });
+
+        alert(`تم تقديم طلب التسجيل بنجاح!\n\nبيانات الدخول الخاصة بك:\nالبريد: ${email}\nكلمة المرور: ${pass}\n\nيرجى حفظها لتسجيل الدخول بعد التفعيل.`);
+      } catch (err) {
+        alert("خطأ أثناء إنشاء الحساب: " + explainError(err));
+      }
+    };
+
+    // تسجيل الدخول
+    document.getElementById("btnLogin").onclick = async () => {
+      const email = document.getElementById("loginEmail").value.trim();
+      const pass = document.getElementById("loginPass").value.trim();
+
+      if (!email || !pass) {
+        alert("يرجى إدخال البريد الإلكتروني وكلمة المرور.");
+        return;
+      }
+
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+      } catch (err) {
+        alert("فشل تسجيل الدخول: " + explainError(err));
+      }
+    };
+
+    // متابعة حالة المستخدم
+    onAuthStateChanged(auth, async (user) => {
+      authBox.classList.add("hidden");
+      pendingBox.classList.add("hidden");
+      adminBox.classList.add("hidden");
+      mainBox.classList.add("hidden");
+
+      if (!user) {
+        authBox.classList.remove("hidden");
+        return;
+      }
+
+      // التحقق من حساب المدير
+      if (user.email === ADMIN_EMAIL) {
+        btnAdminPanel.classList.remove("hidden");
+        userBadge.textContent = "تسجيل دخول: المدير المسؤول";
+        mainBox.classList.remove("hidden");
+        return;
+      }
+
+      // التحقق من تفعيل حساب الطبيب
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (snap.exists() && snap.data().isApproved === true) {
+          userBadge.textContent = `${snap.data().fullName} (${snap.data().position})`;
+          mainBox.classList.remove("hidden");
+        } else {
+          pendingBox.classList.remove("hidden");
+        }
+      } catch (e) {
+        console.error(e);
+        pendingBox.classList.remove("hidden");
+        alert("تعذر قراءة بيانات الحساب: " + explainError(e));
+      }
+    });
+
+    // تسجيل الخروج
+    document.getElementById("btnSignOut").onclick = () => signOut(auth);
+    document.getElementById("btnSignOutPending").onclick = () => signOut(auth);
+
+    // لوحة تحكم الإدارة
+    btnAdminPanel.onclick = () => {
+      mainBox.classList.add("hidden");
+      adminBox.classList.remove("hidden");
+      loadAdminUsers();
+    };
+
+    document.getElementById("btnSwitchToApp").onclick = () => {
+      adminBox.classList.add("hidden");
+      mainBox.classList.remove("hidden");
+    };
+
+    async function loadAdminUsers() {
+      const listEl = document.getElementById("usersList");
+      listEl.innerHTML = "جاري جلب السجلات...";
+      try {
+        const snap = await getDocs(collection(db, "users"));
+        if (snap.empty) {
+          listEl.innerHTML = "لا يوجد أطباء مسجلين حتى الآن.";
+          return;
+        }
+
+        let html = "";
+        snap.forEach((d) => {
+          const u = d.data();
+          html += `
+            <div class="user-card">
+              <div>
+                <strong>${esc(u.fullName)}</strong> (${esc(u.position)})<br>
+                <small>${esc(u.email)} | ${esc(u.mobile)}</small><br>
+                <span style="font-size:11px; color:${u.isApproved ? 'green' : 'red'};">
+                  الحالة: ${u.isApproved ? 'مفعل ومسموح له' : 'قيد الانتظار'}
+                </span>
+              </div>
+              <div style="display:flex; gap:6px;">
+                <button onclick="toggleUser('${d.id}', ${!u.isApproved})" style="padding:4px 8px; font-size:12px; width:auto; background:${u.isApproved ? '#d97706':'#16a34a'};">
+                  ${u.isApproved ? 'تعطيل' : 'تفعيل'}
+                </button>
+                <button onclick="removeUser('${d.id}')" style="padding:4px 8px; font-size:12px; width:auto; background:#dc2626;">حذف</button>
+              </div>
+            </div>
+          `;
+        });
+        listEl.innerHTML = html;
+      } catch (err) {
+        listEl.textContent = "تعذر تحميل البيانات: " + explainError(err);
+      }
+    }
+
+    window.toggleUser = async (uid, newStatus) => {
+      try {
+        await updateDoc(doc(db, "users", uid), { isApproved: newStatus });
+      } catch (err) {
+        alert("تعذر تحديث الحساب: " + explainError(err));
+      }
+      loadAdminUsers();
+    };
+
+    window.removeUser = async (uid) => {
+      if (confirm("هل أنت متأكد من رغبتك في حذف هذا الحساب نهائياً؟")) {
+        try {
+          await deleteDoc(doc(db, "users", uid));
+        } catch (err) {
+          alert("تعذر حذف الحساب: " + explainError(err));
+        }
+        loadAdminUsers();
+      }
+    };
+
+    // توليد التقرير الطبي
+    document.getElementById("btnGenerate").onclick = async () => {
+      const ptName = document.getElementById("ptName").value.trim();
+      const ptAge = document.getElementById("ptAge").value.trim();
+      const ptHistory = document.getElementById("ptHistory").value.trim();
+      const ptDrug = document.getElementById("ptDrug").value.trim();
+      const apiKey = document.getElementById("geminiKey").value.trim();
+      const output = document.getElementById("reportOutput");
+
+      if (!ptName || !ptAge || !ptHistory || !ptDrug) {
+        alert("يرجى ملء جميع بيانات المريض والدواء المطلوب.");
+        return;
+      }
+      if (!apiKey) {
+        alert("يرجى إدخال Gemini API Key.");
+        return;
+      }
+
+      localStorage.setItem("picu_gemini_key", apiKey);
+      output.value = "جاري صياغة التقرير الطبي للتأمين الصحي بالذكاء الاصطناعي...";
+
+      const promptText = `أنت طبيب رعاية مركزة للأطفال استشاري خبير. اكتب تقريراً طبياً رسمياً باللغة العربية موجهاً إلى (السادة رئيس وأعضاء اللجنة الطبية بالتأمين الصحي) بأسلوب طبي وأكاديمي رصين ومقنع للموافقة على صرف الدواء المطلوب.
+البيانات:
+- اسم المريض: ${ptName}
+- السن: ${ptAge}
+- التشخيص والتاريخ المرضي للرعاية: ${ptHistory}
+- الدواء المطلوب ومبرر الاستخدام: ${ptDrug}
+
+اكتب التقرير مباشرة متضمناً الديباجة الرسمية، التقييم الإكلينيكي وحرج الحالة، والتوصية الصريحة بالعلاج.`;
+
+      try {
+        // gemini-1.5-flash تم إيقافه من Google، لذلك نستخدم أحدث نسخة Flash تلقائياً
+        const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: promptText }] }]
+          })
+        });
+
+        const data = await res.json();
+        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+          output.value = data.candidates[0].content.parts[0].text;
+        } else {
+          output.value = "حدث خطأ في الرد من API:\n" + JSON.stringify(data);
+        }
+      } catch (err) {
+        output.value = "تعذر الاتصال بـ Gemini API: " + err.message;
+      }
+    };
+
+    // نسخ التقرير
+    document.getElementById("btnCopy").onclick = () => {
+      const out = document.getElementById("reportOutput");
+      if (!out.value) return;
+      navigator.clipboard.writeText(out.value);
+      alert("تم نسخ التقرير إلى الحافظة بنجاح!");
+    };
+  </script>
+</body>
+</html>
