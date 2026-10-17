@@ -171,6 +171,32 @@
     .wa { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; background: #e7f6ee; color: var(--green); font-weight: 600; text-decoration: none; direction: ltr; }
     .wa:hover { background: #d4efe1; }
 
+    /* ===== Report history ===== */
+    #btnHistory { background: var(--green); }
+    #btnHistory:hover { background: var(--green-dark); }
+    .save-status { font-size: 13px; margin-top: 10px; min-height: 1em; color: var(--muted); }
+    .save-status.ok { color: var(--green); font-weight: 600; }
+    .save-status.err { color: var(--red); font-weight: 600; }
+    .history-tools { margin-bottom: 14px; }
+    .history-tools .hint { margin-top: 8px; }
+    #historyList { color: var(--muted); font-size: 14px; }
+    .h-item { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; background: #fff; color: var(--text); overflow: hidden; }
+    .h-item summary { list-style: none; cursor: pointer; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .h-item summary::-webkit-details-marker { display: none; }
+    .h-item summary:hover { background: #f8fafc; }
+    .h-item[open] summary { border-bottom: 1px solid var(--border); background: #f6f8fb; }
+    .h-patient { font-weight: 700; color: var(--navy); }
+    .h-meta { font-size: 12.5px; color: var(--muted); }
+    .h-date { font-size: 12px; color: var(--muted); white-space: nowrap; direction: rtl; }
+    .h-body { padding: 14px; }
+    .h-facts { display: grid; gap: 6px; font-size: 13.5px; margin-bottom: 12px; }
+    .h-facts b { color: #2b3a52; }
+    .h-text { white-space: pre-wrap; background: #fbfcfe; border: 1px solid var(--border); border-radius: 10px; padding: 14px; font-size: 14.5px; line-height: 1.9; max-height: 420px; overflow: auto; }
+    .h-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    @media (max-width: 520px) {
+      .h-item summary { flex-direction: column; align-items: flex-start; }
+    }
+
     @media (max-width: 520px) {
       .site-header .inner { grid-template-columns: 54px 1fr 54px; gap: 8px; }
       .site-header img { width: 54px; height: 54px; }
@@ -284,6 +310,7 @@
         </div>
       </div>
       <div class="actions">
+        <button id="btnHistory" class="btn-sm hidden">سجل التقارير</button>
         <button id="btnAdminPanel" class="btn-sm hidden">لوحة الإدارة</button>
         <button id="btnSignOut" class="btn-sm">خروج</button>
       </div>
@@ -337,6 +364,23 @@
       </div>
       <textarea id="reportOutput" rows="10" readonly placeholder="سيظهر التقرير الطبي هنا بعد التوليد..."></textarea>
     </div>
+    <div id="saveStatus" class="save-status"></div>
+  </section>
+
+  <!-- سجل التقارير (للمدير فقط) -->
+  <section id="historyBox" class="card hidden">
+    <div class="admin-head">
+      <h2 class="card-title" style="margin:0">
+        <span class="icon-badge"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg></span>
+        سجل التقارير
+      </h2>
+      <button id="btnHistoryBack" class="btn-ghost btn-sm">← شاشة التقارير</button>
+    </div>
+    <div class="history-tools">
+      <input id="historySearch" type="search" placeholder="ابحث باسم المريض، الطبيب، التشخيص أو الدواء...">
+      <div id="historyCount" class="hint"></div>
+    </div>
+    <div id="historyList">جاري تحميل التقارير...</div>
   </section>
 
   </main>
@@ -370,8 +414,13 @@
       getDoc, 
       collection, 
       getDocs, 
-      updateDoc, 
-      deleteDoc 
+      updateDoc,
+      deleteDoc,
+      addDoc,
+      query,
+      orderBy,
+      limit,
+      serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     // إعدادات Firebase الخاصة بمشروعك
@@ -398,6 +447,11 @@
     const userBadge = document.getElementById("userBadge");
     const btnAdminPanel = document.getElementById("btnAdminPanel");
     const avatar = document.getElementById("avatar");
+    const historyBox = document.getElementById("historyBox");
+    const btnHistory = document.getElementById("btnHistory");
+    const saveStatus = document.getElementById("saveStatus");
+    let currentProfile = null;
+    let allReports = [];
 
     // التبديل بين تبويب الدخول والتسجيل
     document.querySelectorAll(".tab").forEach((tab) => {
@@ -494,7 +548,11 @@
       pendingBox.classList.add("hidden");
       adminBox.classList.add("hidden");
       mainBox.classList.add("hidden");
+      historyBox.classList.add("hidden");
       btnAdminPanel.classList.add("hidden");
+      btnHistory.classList.add("hidden");
+      currentProfile = null;
+      allReports = [];
 
       if (!user) {
         authBox.classList.remove("hidden");
@@ -504,8 +562,10 @@
       // التحقق من حساب المدير
       if (user.email === ADMIN_EMAIL) {
         btnAdminPanel.classList.remove("hidden");
+        btnHistory.classList.remove("hidden");
         userBadge.textContent = "المدير المسؤول";
         avatar.textContent = "م";
+        currentProfile = { fullName: "المدير المسؤول", position: "الإدارة" };
         mainBox.classList.remove("hidden");
         return;
       }
@@ -514,6 +574,7 @@
       try {
         const snap = await getDoc(doc(db, "users", user.uid));
         if (snap.exists() && snap.data().isApproved === true) {
+          currentProfile = snap.data();
           userBadge.textContent = `${snap.data().fullName} (${snap.data().position})`;
           avatar.textContent = (snap.data().fullName || "د").trim().charAt(0).toUpperCase();
           mainBox.classList.remove("hidden");
@@ -534,6 +595,7 @@
     // لوحة تحكم الإدارة
     btnAdminPanel.onclick = () => {
       mainBox.classList.add("hidden");
+      historyBox.classList.add("hidden");
       adminBox.classList.remove("hidden");
       loadAdminUsers();
     };
@@ -541,6 +603,120 @@
     document.getElementById("btnSwitchToApp").onclick = () => {
       adminBox.classList.add("hidden");
       mainBox.classList.remove("hidden");
+    };
+
+    // ===== سجل التقارير (للمدير فقط) =====
+    async function saveReport(r) {
+      saveStatus.className = "save-status";
+      saveStatus.textContent = "جاري حفظ التقرير في السجل...";
+      try {
+        await addDoc(collection(db, "reports"), {
+          ...r,
+          uid: auth.currentUser.uid,
+          doctorEmail: auth.currentUser.email || "",
+          doctorName: currentProfile?.fullName || "",
+          doctorPosition: currentProfile?.position || "",
+          createdAt: serverTimestamp()
+        });
+        saveStatus.className = "save-status ok";
+        saveStatus.textContent = "✓ تم حفظ التقرير في السجل";
+      } catch (err) {
+        console.error(err);
+        saveStatus.className = "save-status err";
+        saveStatus.textContent = "لم يتم حفظ التقرير في السجل: " + explainError(err);
+      }
+    }
+
+    function formatDate(ts) {
+      if (!ts || !ts.toDate) return "";
+      return ts.toDate().toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" });
+    }
+
+    function renderHistory() {
+      const listEl = document.getElementById("historyList");
+      const q = document.getElementById("historySearch").value.trim().toLowerCase();
+      const items = allReports.filter((r) => !q || [r.patientName, r.doctorName, r.history, r.drug]
+        .some((v) => String(v || "").toLowerCase().includes(q)));
+
+      document.getElementById("historyCount").textContent = q
+        ? `${items.length} من ${allReports.length} تقرير`
+        : `إجمالي التقارير: ${allReports.length}`;
+
+      if (!allReports.length) { listEl.textContent = "لا توجد تقارير محفوظة حتى الآن."; return; }
+      if (!items.length) { listEl.textContent = "لا توجد نتائج مطابقة للبحث."; return; }
+
+      listEl.innerHTML = items.map((r) => `
+        <details class="h-item">
+          <summary>
+            <div>
+              <div class="h-patient">${esc(r.patientName)} <span class="h-meta">— ${esc(r.patientAge)}</span></div>
+              <div class="h-meta">د. ${esc(r.doctorName)}${r.doctorPosition ? ` (${esc(r.doctorPosition)})` : ""}</div>
+            </div>
+            <div class="h-date">${esc(formatDate(r.createdAt))}</div>
+          </summary>
+          <div class="h-body">
+            <div class="h-facts">
+              <div><b>التشخيص:</b> ${esc(r.history)}</div>
+              <div><b>العلاج المطلوب:</b> ${esc(r.drug)}</div>
+            </div>
+            <div class="h-text">${esc(r.reportText)}</div>
+            <div class="h-actions">
+              <button class="btn-sm" data-action="copy" data-id="${r.id}">نسخ التقرير</button>
+              <button class="btn-sm btn-danger" data-action="delete" data-id="${r.id}">حذف</button>
+            </div>
+          </div>
+        </details>
+      `).join("");
+    }
+
+    async function loadHistory() {
+      const listEl = document.getElementById("historyList");
+      listEl.textContent = "جاري تحميل التقارير...";
+      try {
+        const snap = await getDocs(query(collection(db, "reports"), orderBy("createdAt", "desc"), limit(1000)));
+        allReports = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        renderHistory();
+      } catch (err) {
+        listEl.textContent = "تعذر تحميل السجل: " + explainError(err);
+      }
+    }
+
+    btnHistory.onclick = () => {
+      mainBox.classList.add("hidden");
+      adminBox.classList.add("hidden");
+      historyBox.classList.remove("hidden");
+      loadHistory();
+    };
+
+    document.getElementById("btnHistoryBack").onclick = () => {
+      historyBox.classList.add("hidden");
+      mainBox.classList.remove("hidden");
+    };
+
+    document.getElementById("historySearch").oninput = renderHistory;
+
+    document.getElementById("historyList").onclick = async (e) => {
+      const btn = e.target.closest("button[data-action]");
+      if (!btn) return;
+      const r = allReports.find((x) => x.id === btn.dataset.id);
+      if (!r) return;
+
+      if (btn.dataset.action === "copy") {
+        try { await navigator.clipboard.writeText(r.reportText || ""); } catch (err) { alert("تعذر النسخ."); return; }
+        btn.textContent = "تم النسخ ✓";
+        setTimeout(() => { btn.textContent = "نسخ التقرير"; }, 2000);
+      }
+
+      if (btn.dataset.action === "delete") {
+        if (!confirm(`حذف تقرير المريض "${r.patientName}" نهائياً؟`)) return;
+        try {
+          await deleteDoc(doc(db, "reports", r.id));
+          allReports = allReports.filter((x) => x.id !== r.id);
+          renderHistory();
+        } catch (err) {
+          alert("تعذر حذف التقرير: " + explainError(err));
+        }
+      }
     };
 
     async function loadAdminUsers() {
@@ -620,6 +796,8 @@
 
       localStorage.setItem("picu_gemini_key", apiKey);
       output.value = "جاري صياغة التقرير الطبي للتأمين الصحي بالذكاء الاصطناعي...";
+      saveStatus.className = "save-status";
+      saveStatus.textContent = "";
 
       const btn = document.getElementById("btnGenerate");
       const btnHtml = btn.innerHTML;
@@ -648,6 +826,7 @@
         const data = await res.json();
         if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
           output.value = data.candidates[0].content.parts[0].text;
+          await saveReport({ patientName: ptName, patientAge: ptAge, history: ptHistory, drug: ptDrug, reportText: output.value });
         } else {
           output.value = "حدث خطأ في الرد من API:\n" + JSON.stringify(data);
         }
