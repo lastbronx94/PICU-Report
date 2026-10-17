@@ -182,6 +182,28 @@
     .age-part span { font-size: 13px; color: var(--muted); white-space: nowrap; }
     .age-part input::-webkit-outer-spin-button, .age-part input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     .age-part input[type=number] { -moz-appearance: textfield; }
+    /* اختيار الوحدة */
+    .unit-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .unit-opt { margin: 0; cursor: pointer; position: relative; }
+    .unit-opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; opacity: 0; pointer-events: none; }
+    .unit-opt span {
+      display: block; text-align: center; padding: 11px 6px; border: 1px solid var(--input-border); border-radius: 10px;
+      background: #fbfcfe; font-size: 14px; font-weight: 600; color: #2b3a52; transition: all .15s;
+    }
+    .unit-opt:hover span { border-color: var(--primary); }
+    .unit-opt input:checked + span { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); box-shadow: 0 0 0 3px rgba(18, 87, 166, .12); }
+    .unit-opt input:focus-visible + span { box-shadow: 0 0 0 3px rgba(18, 87, 166, .3); }
+    .unit-picker.invalid .unit-opt span { border-color: var(--red); }
+
+    /* فلتر الوحدات في السجل */
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .chip { width: auto; padding: 6px 12px; font-size: 13px; border-radius: 999px; background: #fff; color: var(--muted); border: 1px solid var(--border); }
+    .chip:hover { background: var(--primary-soft); color: var(--primary); }
+    .chip.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+    .chip .n { display: inline-block; min-width: 20px; padding: 0 6px; margin-inline-start: 4px; border-radius: 999px; background: rgba(0,0,0,.08); font-size: 12px; }
+    .chip.active .n { background: rgba(255,255,255,.2); }
+    .unit-badge { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 1px 9px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); margin-inline-start: 6px; vertical-align: middle; }
+    .unit-badge.none { background: #eef2f7; color: var(--muted); }
     .opt { font-weight: 400; color: var(--muted); font-size: 12px; }
     .missing-note { background: var(--amber-soft); color: #7a4a0c; border-bottom: 1px solid #f3d9a4; padding: 10px 14px; font-size: 13px; }
     #reportOutput:not([readonly]) { background: #fffef7; }
@@ -329,6 +351,14 @@
     </div>
 
     <div class="section-head"><span class="num">1</span> بيانات المريض</div>
+    <div class="field">
+      <label>مكان حجز المريض</label>
+      <div class="unit-picker" id="unitPicker" role="radiogroup">
+        <label class="unit-opt"><input type="radio" name="ptUnit" value="الرعاية الجديدة"><span>الرعاية الجديدة</span></label>
+        <label class="unit-opt"><input type="radio" name="ptUnit" value="الرعاية القديمة"><span>الرعاية القديمة</span></label>
+        <label class="unit-opt"><input type="radio" name="ptUnit" value="رعاية الجراحة"><span>رعاية الجراحة</span></label>
+      </div>
+    </div>
     <div class="row">
       <div class="field">
         <label for="ptName">اسم المريض</label>
@@ -437,6 +467,7 @@
       <button id="btnHistoryBack" class="btn-ghost btn-sm">← شاشة التقارير</button>
     </div>
     <div class="history-tools">
+      <div class="chips" id="unitFilter"></div>
       <input id="historySearch" type="search" placeholder="ابحث باسم المريض، الطبيب، التشخيص أو الدواء...">
       <div id="historyCount" class="hint"></div>
     </div>
@@ -616,6 +647,8 @@
       // مسح بيانات المريض والتقرير عند تغيير المستخدم (خصوصية الأجهزة المشتركة)
       ["ptName", "ptAgeY", "ptAgeM", "ptAgeD", "ptWeight", "ptAdmission", "ptHistory", "ptSupport", "ptLabs", "ptPrevTx", "ptDrug", "ptDose", "reportOutput"]
         .forEach((id) => { document.getElementById(id).value = ""; });
+      document.querySelectorAll('input[name="ptUnit"]').forEach((r) => { r.checked = false; });
+      document.getElementById("unitPicker").classList.remove("invalid");
       document.getElementById("reportOutput").readOnly = true;
       document.getElementById("btnSave").disabled = true;
       document.getElementById("missingNote").classList.add("hidden");
@@ -706,24 +739,50 @@
       return ts.toDate().toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" });
     }
 
+    const UNITS = ["الرعاية الجديدة", "الرعاية القديمة", "رعاية الجراحة"];
+    const NO_UNIT = "غير محدد";
+    let unitFilter = "all";
+    const unitOf = (r) => r.unit || NO_UNIT;
+
+    function renderUnitFilter() {
+      const count = (u) => allReports.filter((r) => unitOf(r) === u).length;
+      const hasUnknown = count(NO_UNIT) > 0;
+      const options = [["all", "كل الوحدات", allReports.length], ...UNITS.map((u) => [u, u, count(u)])];
+      if (hasUnknown) options.push([NO_UNIT, NO_UNIT, count(NO_UNIT)]);
+      document.getElementById("unitFilter").innerHTML = options.map(([key, label, n]) =>
+        `<button type="button" class="chip ${unitFilter === key ? "active" : ""}" data-unit="${esc(key)}">${esc(label)}<span class="n">${n}</span></button>`
+      ).join("");
+    }
+
+    document.getElementById("unitFilter").onclick = (e) => {
+      const chip = e.target.closest("button[data-unit]");
+      if (!chip) return;
+      unitFilter = chip.dataset.unit;
+      renderHistory();
+    };
+
     function renderHistory() {
+      renderUnitFilter();
       const listEl = document.getElementById("historyList");
       const q = document.getElementById("historySearch").value.trim().toLowerCase();
-      const items = allReports.filter((r) => !q || [r.patientName, r.doctorName, r.history, r.drug, r.labs, r.prevTx]
+      const inUnit = allReports.filter((r) => unitFilter === "all" || unitOf(r) === unitFilter);
+      const items = inUnit.filter((r) => !q || [r.patientName, r.doctorName, r.history, r.drug, r.labs, r.prevTx]
         .some((v) => String(v || "").toLowerCase().includes(q)));
 
+      const scope = unitFilter === "all" ? "" : ` — ${unitFilter}`;
       document.getElementById("historyCount").textContent = q
-        ? `${items.length} من ${allReports.length} تقرير`
-        : `إجمالي التقارير: ${allReports.length}`;
+        ? `${items.length} من ${inUnit.length} تقرير${scope}`
+        : `عدد التقارير: ${inUnit.length}${scope}`;
 
       if (!allReports.length) { listEl.textContent = "لا توجد تقارير محفوظة حتى الآن."; return; }
+      if (!inUnit.length) { listEl.textContent = "لا توجد تقارير محفوظة لهذه الوحدة حتى الآن."; return; }
       if (!items.length) { listEl.textContent = "لا توجد نتائج مطابقة للبحث."; return; }
 
       listEl.innerHTML = items.map((r) => `
         <details class="h-item">
           <summary>
             <div>
-              <div class="h-patient">${esc(r.patientName)} <span class="h-meta">— ${esc(r.patientAge)}</span></div>
+              <div class="h-patient">${esc(r.patientName)} <span class="h-meta">— ${esc(r.patientAge)}</span><span class="unit-badge ${r.unit ? "" : "none"}">${esc(unitOf(r))}</span></div>
               <div class="h-meta">د. ${esc(r.doctorName)}${r.doctorPosition ? ` (${esc(r.doctorPosition)})` : ""}</div>
             </div>
             <div class="h-date">${esc(formatDate(r.createdAt))}</div>
@@ -764,6 +823,7 @@
     }
 
     btnHistory.onclick = () => {
+      unitFilter = "all";
       mainBox.classList.add("hidden");
       adminBox.classList.add("hidden");
       historyBox.classList.remove("hidden");
@@ -879,6 +939,9 @@
     const btnSave = document.getElementById("btnSave");
     const missingNote = document.getElementById("missingNote");
     let pendingReport = null; // بيانات آخر تقرير تم توليده ولم يُحفظ بعد
+    document.querySelectorAll('input[name="ptUnit"]').forEach((r) => {
+      r.addEventListener("change", () => document.getElementById("unitPicker").classList.remove("invalid"));
+    });
 
     function updateMissingNote() {
       missingNote.classList.toggle("hidden", !/\[\s*يُ?ستكمل/.test(output.value));
@@ -888,6 +951,7 @@
     function buildPrompt(c) {
       const lines = [
         `- اسم المريض: ${c.patientName}`,
+        `- مكان الحجز: وحدة ${c.unit} بمستشفى الأطفال - جامعة عين شمس`,
         `- السن: ${c.patientAge}`,
         c.weight && `- الوزن: ${c.weight}`,
         c.admission && `- دخول الرعاية المركزة / مدة الإقامة: ${c.admission}`,
@@ -927,7 +991,18 @@ ${lines}`;
 
     // توليد التقرير الطبي
     document.getElementById("btnGenerate").onclick = async () => {
+      const unitInput = document.querySelector('input[name="ptUnit"]:checked');
+      const unitPicker = document.getElementById("unitPicker");
+      if (!unitInput) {
+        unitPicker.classList.add("invalid");
+        unitPicker.scrollIntoView({ block: "center", behavior: "smooth" });
+        alert("يرجى اختيار مكان حجز المريض: الرعاية الجديدة أو الرعاية القديمة أو رعاية الجراحة.");
+        return;
+      }
+      unitPicker.classList.remove("invalid");
+
       const c = {
+        unit: unitInput.value,
         patientName: val("ptName"),
         patientAge: arabicAge(),
         weight: val("ptWeight"),
