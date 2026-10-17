@@ -174,6 +174,14 @@
     /* ===== Report history ===== */
     #btnHistory { background: var(--green); }
     #btnHistory:hover { background: var(--green-dark); }
+    /* النصوص المختلطة عربي/إنجليزي: اتجاه كل فقرة حسب أول حرف فيها */
+    textarea, #ptName, #ptAdmission, #ptWeight, #ptDose { unicode-bidi: plaintext; text-align: start; }
+    .age-group { display: flex; gap: 8px; }
+    .age-part { flex: 1; display: flex; align-items: center; gap: 6px; }
+    .age-part input { text-align: center; padding-left: 6px; padding-right: 6px; min-width: 0; }
+    .age-part span { font-size: 13px; color: var(--muted); white-space: nowrap; }
+    .age-part input::-webkit-outer-spin-button, .age-part input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .age-part input[type=number] { -moz-appearance: textfield; }
     .opt { font-weight: 400; color: var(--muted); font-size: 12px; }
     .missing-note { background: var(--amber-soft); color: #7a4a0c; border-bottom: 1px solid #f3d9a4; padding: 10px 14px; font-size: 13px; }
     #reportOutput:not([readonly]) { background: #fffef7; }
@@ -327,8 +335,12 @@
         <input id="ptName" placeholder="الاسم رباعي">
       </div>
       <div class="field">
-        <label for="ptAge">السن</label>
-        <input id="ptAge" placeholder="مثال: 4 سنوات / 6 أشهر">
+        <label for="ptAgeY">السن</label>
+        <div class="age-group">
+          <div class="age-part"><input id="ptAgeY" type="number" min="0" max="18" inputmode="numeric" dir="ltr" placeholder="0"><span>سنة</span></div>
+          <div class="age-part"><input id="ptAgeM" type="number" min="0" max="11" inputmode="numeric" dir="ltr" placeholder="0"><span>شهر</span></div>
+          <div class="age-part"><input id="ptAgeD" type="number" min="0" max="30" inputmode="numeric" dir="ltr" placeholder="0"><span>يوم</span></div>
+        </div>
       </div>
     </div>
     <div class="row">
@@ -375,17 +387,17 @@
     <div class="field">
       <label for="ptDose">الجرعة، عدد المرات، ومدة العلاج <span class="opt">(اختياري)</span></label>
       <input id="ptDose" placeholder="مثال: 150 mg SC كل 4 أسابيع لمدة 6 أشهر">
-      <div class="hint">تُكتب الجرعة في التقرير كما أدخلتها تماماً — لا يقوم الذكاء الاصطناعي بحسابها أو تعديلها.</div>
+      <div class="hint">تُكتب الجرعة في التقرير كما أدخلتها تماماً دون تعديل.</div>
     </div>
 
     <details class="settings" id="aiSettings">
       <summary>
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/></svg>
-        مفتاح Gemini API
+        Pro Key
       </summary>
       <div class="inner">
-        <input id="geminiKey" type="password" dir="ltr" autocomplete="off" placeholder="AIza...">
-        <div class="hint">يُحفظ المفتاح على هذا الجهاز فقط ولا يُرسل إلا إلى Google.</div>
+        <input id="geminiKey" type="password" dir="ltr" autocomplete="off" placeholder="أدخل Pro Key">
+        <div class="hint">يُحفظ المفتاح على هذا الجهاز فقط.</div>
       </div>
     </details>
 
@@ -602,7 +614,7 @@
       currentProfile = null;
       allReports = [];
       // مسح بيانات المريض والتقرير عند تغيير المستخدم (خصوصية الأجهزة المشتركة)
-      ["ptName", "ptAge", "ptWeight", "ptAdmission", "ptHistory", "ptSupport", "ptLabs", "ptPrevTx", "ptDrug", "ptDose", "reportOutput"]
+      ["ptName", "ptAgeY", "ptAgeM", "ptAgeD", "ptWeight", "ptAdmission", "ptHistory", "ptSupport", "ptLabs", "ptPrevTx", "ptDrug", "ptDose", "reportOutput"]
         .forEach((id) => { document.getElementById(id).value = ""; });
       document.getElementById("reportOutput").readOnly = true;
       document.getElementById("btnSave").disabled = true;
@@ -846,6 +858,23 @@
 
     // توليد التقرير الطبي
     const val = (id) => document.getElementById(id).value.trim();
+
+    // تحويل السن من أرقام إلى صياغة عربية صحيحة، مثال: 4 سنوات و 6 أشهر
+    function arabicCount(n, one, two, few, many) {
+      if (n === 1) return one;
+      if (n === 2) return two;
+      if (n >= 3 && n <= 10) return `${n} ${few}`;
+      return `${n} ${many}`;
+    }
+    function arabicAge() {
+      const num = (id) => Math.max(0, parseInt(val(id), 10) || 0);
+      const y = num("ptAgeY"), m = num("ptAgeM"), d = num("ptAgeD");
+      return [
+        y && arabicCount(y, "سنة واحدة", "سنتان", "سنوات", "سنة"),
+        m && arabicCount(m, "شهر واحد", "شهران", "أشهر", "شهراً"),
+        d && arabicCount(d, "يوم واحد", "يومان", "أيام", "يوماً")
+      ].filter(Boolean).join(" و ");
+    }
     const output = document.getElementById("reportOutput");
     const btnSave = document.getElementById("btnSave");
     const missingNote = document.getElementById("missingNote");
@@ -874,22 +903,23 @@
         ? `${currentProfile.fullName} — ${currentProfile.position}`
         : "[اسم الطبيب المعالج ودرجته]";
 
-      return `أنت استشاري رعاية مركزة للأطفال. اكتب تقريراً طبياً رسمياً باللغة العربية موجهاً إلى السادة رئيس وأعضاء اللجنة الطبية بالتأمين الصحي، بأسلوب طبي وأكاديمي رصين ومقنع، لطلب الموافقة على صرف العلاج المطلوب.
+      return `أنت استشاري رعاية مركزة للأطفال ذو خبرة طويلة في كتابة التقارير الطبية للجان التأمين الصحي. اكتب تقريراً طبياً رسمياً مقنعاً باللغة العربية الفصحى موجهاً إلى السادة رئيس وأعضاء اللجنة الطبية بالتأمين الصحي، لطلب الموافقة على صرف العلاج المطلوب.
 
-قواعد صارمة يجب الالتزام بها:
-1. استخدم فقط المعلومات الواردة في "بيانات الحالة" أدناه. ممنوع اختراع أي نتائج تحاليل أو علامات حيوية أو تواريخ أو أعداد دخول أو علاجات سابقة أو مضاعفات غير مذكورة.
-2. إذا كانت هناك معلومة مهمة لتقوية الطلب وغير متوفرة، لا تخمّنها؛ اكتب مكانها بين قوسين مربعين بهذا الشكل: [يُستكمل: وصف المعلومة الناقصة].
-3. اكتب الجرعة وعدد المرات والمدة حرفياً كما كتبها الطبيب، ولا تحسب أو تعدّل أو تقترح أي جرعة. إذا لم تُذكر الجرعة اكتب: [يُستكمل: الجرعة وعدد المرات ومدة العلاج].
-4. لا تذكر أسماء مراجع أو دراسات أو أرقام توصيات بعينها. يمكنك فقط الإشارة بشكل عام إلى "الإرشادات العلمية المعتمدة".
-5. اكتب التشخيصات وأسماء الأدوية والمصطلحات الطبية بالإنجليزية كما وردت في البيانات.
-6. التزم بهذا الترتيب:
+المطلوب:
+1. اللغة: اكتب التقرير كاملاً بالعربية. ترجم التشخيصات وأسماء الحالات والمصطلحات الطبية إلى العربية، واذكر المصطلح الإنجليزي بين قوسين عند أول ذكر فقط، مثال: الربو الشعبي الحاد المستمر (Severe Persistent Asthma). اسم الدواء يُكتب بالعربية مع اسمه الإنجليزي بين قوسين.
+2. وصف الحالة: اشرح طبيعة المرض وخطورته عند الأطفال بشكل واضح ومختصر، والمضاعفات والمخاطر المعروفة طبياً إذا لم تتم السيطرة عليه (مثل تكرار الأزمات الحادة، ودخول الرعاية المركزة، والحاجة للتنفس الصناعي، والتأثير على النمو وجودة الحياة)، بما يتناسب مع التشخيص المذكور.
+3. المبررات المقنعة: ادعم الطلب بأسباب طبية حقيقية ومعروفة علمياً، مثل: لماذا يُعد هذا الدواء مناسباً لهذه الحالة تحديداً، وكيف يعمل باختصار، والفوائد المتوقعة منه (مثل تقليل الأزمات ومرات دخول المستشفى والحاجة للكورتيزون)، وأن عدم صرفه قد يعرّض الطفل لمخاطر أكبر وتكلفة علاجية أعلى على المدى الطويل. اربط هذه الأسباب ببيانات الحالة.
+4. الأمانة الطبية: المعلومات العامة عن المرض والدواء من المعرفة الطبية المعتمدة مسموحة ومطلوبة. أما المعلومات الخاصة بهذا المريض تحديداً (أرقام التحاليل، العلامات الحيوية، التواريخ، عدد مرات الدخول، العلاجات السابقة) فاستخدم منها فقط ما ورد في البيانات ولا تخترع أرقاماً أو أحداثاً غير مذكورة. إذا لم تُذكر معلومة فلا تذكرها ولا تترك فراغات.
+5. الجرعة: إذا كتب الطبيب الجرعة فاكتبها كما هي تماماً دون تعديل. إذا لم تُذكر فاكتب "بالجرعة المناسبة لعمر ووزن الطفل وفقاً للبروتوكول العلاجي المعتمد".
+6. لا تذكر أسماء مراجع أو دراسات بعينها؛ يمكنك الإشارة بشكل عام إلى "الإرشادات العلمية الدولية المعتمدة".
+7. الترتيب:
    - الديباجة الرسمية والتحية.
    - بيانات المريض.
-   - الملخص الإكلينيكي وخطورة الحالة.
-   - مبررات طلب العلاج (مع ذكر العلاجات السابقة وعدم الاستجابة لها إن وُجدت في البيانات).
-   - التوصية الصريحة بالعلاج المطلوب مع الجرعة والمدة.
+   - الحالة المرضية وخطورتها.
+   - مبررات طلب العلاج.
+   - التوصية الصريحة بالموافقة على صرف العلاج مع الجرعة والمدة.
    - الختام: "وتفضلوا بقبول فائق الاحترام والتقدير" ثم سطر "الطبيب المعالج: ${signer}" ثم سطر "التوقيع: ............".
-7. اكتب التقرير مباشرة بدون أي مقدمة أو تعليق أو ملاحظات منك خارج نص التقرير، وبدون استخدام رموز Markdown مثل ** أو #.
+8. الأسلوب: طبي رصين ومقنع ومتماسك، فقرات واضحة، بطول مناسب (حوالي صفحة). اكتب التقرير مباشرة بدون أي مقدمة أو تعليق منك خارج نص التقرير، وبدون رموز Markdown مثل ** أو #.
 
 بيانات الحالة:
 ${lines}`;
@@ -899,7 +929,7 @@ ${lines}`;
     document.getElementById("btnGenerate").onclick = async () => {
       const c = {
         patientName: val("ptName"),
-        patientAge: val("ptAge"),
+        patientAge: arabicAge(),
         weight: val("ptWeight"),
         admission: val("ptAdmission"),
         history: val("ptHistory"),
@@ -912,13 +942,13 @@ ${lines}`;
       const apiKey = val("geminiKey");
 
       if (!c.patientName || !c.patientAge || !c.history || !c.drug) {
-        alert("يرجى ملء الحقول الأساسية: اسم المريض، السن، التشخيص، والدواء المطلوب.");
+        alert("يرجى ملء الحقول الأساسية: اسم المريض، السن (سنة أو شهر أو يوم)، التشخيص، والدواء المطلوب.");
         return;
       }
       if (!apiKey) {
         document.getElementById("aiSettings").open = true;
         document.getElementById("geminiKey").focus();
-        alert("يرجى إدخال Gemini API Key.");
+        alert("يرجى إدخال المفتاح (Pro Key).");
         return;
       }
 
@@ -943,8 +973,8 @@ ${lines}`;
           headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
           body: JSON.stringify({
             contents: [{ parts: [{ text: buildPrompt(c) }] }],
-            // حرارة منخفضة = التزام أكبر بالبيانات وصياغة أكثر ثباتاً
-            generationConfig: { temperature: 0.3 }
+            // حرارة متوسطة = صياغة طبيعية ومقنعة مع الالتزام ببيانات الحالة
+            generationConfig: { temperature: 0.6 }
           })
         });
 
@@ -959,10 +989,15 @@ ${lines}`;
           updateMissingNote();
           saveStatus.textContent = "راجع التقرير قبل الحفظ.";
         } else {
-          output.value = "حدث خطأ في الرد من API:\n" + JSON.stringify(data);
+          const msg = data.error?.message || "";
+          output.value = /api key|API_KEY|permission|unauthenticated/i.test(msg)
+            ? "المفتاح (Pro Key) غير صحيح أو غير مفعّل. يرجى التأكد منه والمحاولة مرة أخرى."
+            : /quota|exhausted|rate/i.test(msg)
+              ? "تم الوصول للحد اليومي المسموح للمفتاح (Pro Key). يرجى المحاولة لاحقاً."
+              : "تعذر إنشاء التقرير، يرجى المحاولة مرة أخرى." + (msg ? `\n(${msg})` : "");
         }
       } catch (err) {
-        output.value = "تعذر الاتصال بـ Gemini API: " + err.message;
+        output.value = "تعذر الاتصال بالخدمة، يرجى التأكد من الإنترنت والمحاولة مرة أخرى.";
       } finally {
         btn.disabled = false;
         btn.innerHTML = btnHtml;
