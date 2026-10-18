@@ -182,6 +182,51 @@
     .age-part span { font-size: 13px; color: var(--muted); white-space: nowrap; }
     .age-part input::-webkit-outer-spin-button, .age-part input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     .age-part input[type=number] { -moz-appearance: textfield; }
+    /* الملف الشخصي */
+    #btnMyReports { background: var(--green); }
+    #btnMyReports:hover { background: var(--green-dark); }
+    .link-btn { background: none; color: var(--primary); width: auto; padding: 10px 0 0; font-size: 13.5px; font-weight: 600; display: block; margin: 0 auto; }
+    .link-btn:hover { background: none; text-decoration: underline; }
+    .profile-head { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .avatar-lg { width: 56px; height: 56px; font-size: 22px; }
+    .prof-name { font-size: 18px; font-weight: 700; color: var(--navy); }
+    .prof-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+    .prof-item { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: #fbfcfe; min-width: 0; }
+    .prof-item span { display: block; font-size: 12px; color: var(--muted); }
+    .prof-item b { display: block; font-size: 14px; color: var(--text); overflow-wrap: anywhere; text-align: start; unicode-bidi: plaintext; }
+    @media (max-width: 520px) { .prof-grid { grid-template-columns: 1fr; } }
+
+    /* اقتراحات التشخيص */
+    .dx-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .dx-chip { width: auto; padding: 5px 10px; font-size: 12.5px; font-weight: 500; border-radius: 999px; background: #fff; color: #2b3a52; border: 1px solid var(--border); direction: ltr; }
+    .dx-chip:hover { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+    .dx-chip.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .dx-more { width: auto; padding: 5px 10px; font-size: 12.5px; border-radius: 999px; background: none; color: var(--primary); border: 1px dashed var(--primary); }
+    .dx-more:hover { background: var(--primary-soft); }
+
+    /* الأعراض المقترحة حسب التشخيص */
+    .suggest-box { margin-top: 8px; }
+    .suggest-box:empty { display: none; }
+    .sx-group { margin-top: 8px; }
+    .sx-title { font-size: 12.5px; font-weight: 700; color: var(--navy); margin-bottom: 4px; direction: ltr; text-align: right; }
+    .sx-chip { width: auto; padding: 4px 10px; font-size: 12px; font-weight: 500; border-radius: 999px; background: #f6f8fb; color: #2b3a52; border: 1px dashed var(--input-border); direction: ltr; margin: 0 0 6px 6px; }
+    .sx-chip:hover { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+    .sx-chip.on { background: var(--green); border: 1px solid var(--green); color: #fff; }
+    .sx-chips { display: flex; flex-wrap: wrap; }
+
+    /* حاسبة الجرعات */
+    .dose-calc { margin-top: 8px; border: 1px solid #cfe0f5; background: #f4f8fd; border-radius: 12px; padding: 12px 14px; font-size: 13.5px; }
+    .dose-calc .dc-title { font-weight: 700; color: var(--navy); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .dc-drug { border-top: 1px dashed #cfe0f5; padding-top: 8px; margin-top: 8px; }
+    .dc-drug:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+    .dc-name { font-weight: 700; color: var(--primary); direction: ltr; text-align: right; }
+    .dc-lines { direction: ltr; text-align: left; color: #2b3a52; line-height: 1.8; margin: 4px 0 6px; unicode-bidi: plaintext; }
+    .dc-lines b { color: var(--text); }
+    .dc-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+    .dc-warn { color: var(--amber); font-size: 12.5px; }
+    .dc-note { color: var(--muted); font-size: 12px; margin-top: 8px; }
+    #ptDose::placeholder { white-space: pre-line; }
+
     /* اختيار الوحدة */
     .unit-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .unit-opt { margin: 0; cursor: pointer; position: relative; }
@@ -268,24 +313,30 @@
 
     <div id="loginPane">
       <h2 class="card-title">مرحباً بك</h2>
-      <p class="card-sub">سجّل الدخول ببيانات الحساب التي حصلت عليها عند التسجيل.</p>
+      <p class="card-sub">سجّل الدخول بالبريد الإلكتروني وكلمة المرور الخاصة بحسابك.</p>
       <div class="field">
         <label for="loginEmail">البريد الإلكتروني</label>
-        <input id="loginEmail" type="email" dir="ltr" autocomplete="username" placeholder="name@picu.com">
+        <input id="loginEmail" type="email" dir="ltr" autocomplete="username" placeholder="name@example.com">
       </div>
       <div class="field">
         <label for="loginPass">كلمة المرور</label>
         <input id="loginPass" type="password" dir="ltr" autocomplete="current-password" placeholder="••••••••">
       </div>
       <button id="btnLogin" class="btn-lg">دخول</button>
+      <button id="btnForgot" type="button" class="link-btn">نسيت كلمة المرور؟</button>
     </div>
 
     <div id="registerPane" class="hidden">
       <h2 class="card-title">تسجيل حساب طبيب جديد</h2>
       <p class="card-sub">يتم تفعيل الحساب بعد مراجعته من إدارة الرعاية المركزة.</p>
       <div class="field">
-        <label for="regName">الاسم بالإنجليزية</label>
-        <input id="regName" dir="ltr" autocomplete="name" placeholder="Ahmed Mohamed">
+        <label for="regName">الاسم الكامل</label>
+        <input id="regName" autocomplete="name" placeholder="مثال: Ahmed Mohamed أو أحمد محمد">
+      </div>
+      <div class="field">
+        <label for="regEmail">البريد الإلكتروني</label>
+        <input id="regEmail" type="email" dir="ltr" autocomplete="email" placeholder="name@example.com">
+        <div class="hint">استخدم بريدك الحقيقي — ستحتاجه لتسجيل الدخول واستعادة كلمة المرور.</div>
       </div>
       <div class="row">
         <div class="field">
@@ -303,9 +354,19 @@
           <input id="regMobile" type="tel" dir="ltr" autocomplete="tel" placeholder="01xxxxxxxxx">
         </div>
       </div>
+      <div class="row">
+        <div class="field">
+          <label for="regPass">كلمة المرور</label>
+          <input id="regPass" type="password" dir="ltr" autocomplete="new-password" placeholder="على الأقل 6 أحرف">
+        </div>
+        <div class="field">
+          <label for="regPass2">تأكيد كلمة المرور</label>
+          <input id="regPass2" type="password" dir="ltr" autocomplete="new-password" placeholder="أعد كتابة كلمة المرور">
+        </div>
+      </div>
       <div class="note">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
-        <span>سيتم إنشاء البريد الإلكتروني وكلمة المرور تلقائياً وعرضهما لك بعد التسجيل — احتفظ بهما.</span>
+        <span>بعد التسجيل يُراجع طلبك من إدارة الرعاية المركزة، وبعد التفعيل يمكنك الدخول بالبريد وكلمة المرور التي اخترتها.</span>
       </div>
       <button id="btnRegister" class="btn-lg">تسجيل الحساب</button>
     </div>
@@ -345,7 +406,9 @@
       </div>
       <div class="actions">
         <button id="btnHistory" class="btn-sm hidden">سجل التقارير</button>
+        <button id="btnMyReports" class="btn-sm hidden">تقاريري</button>
         <button id="btnAdminPanel" class="btn-sm hidden">لوحة الإدارة</button>
+        <button id="btnProfile" class="btn-sm btn-ghost hidden">حسابي</button>
         <button id="btnSignOut" class="btn-sm">خروج</button>
       </div>
     </div>
@@ -375,8 +438,8 @@
     </div>
     <div class="row">
       <div class="field">
-        <label for="ptWeight">الوزن <span class="opt">(اختياري)</span></label>
-        <input id="ptWeight" placeholder="مثال: 16 كجم">
+        <label for="ptWeight">الوزن <span class="opt">(مطلوب لحساب الجرعات)</span></label>
+        <div class="age-part"><input id="ptWeight" type="number" min="0.3" max="150" step="0.1" inputmode="decimal" dir="ltr" placeholder="0"><span>كجم</span></div>
       </div>
       <div class="field">
         <label for="ptAdmission">تاريخ دخول الرعاية / مدة الإقامة <span class="opt">(اختياري)</span></label>
@@ -386,8 +449,15 @@
 
     <div class="section-head"><span class="num">2</span> الحالة الإكلينيكية</div>
     <div class="field">
-      <label for="ptHistory">التاريخ المرضي والتشخيص الإكلينيكي</label>
-      <textarea id="ptHistory" rows="3" placeholder="مثال: Severe Persistent Asthma, Pediatric ARDS..."></textarea>
+      <label for="ptHistory">التشخيص</label>
+      <textarea id="ptHistory" rows="2" placeholder="اختر من التشخيصات الشائعة بالأسفل أو اكتب التشخيص..."></textarea>
+      <div class="hint">تشخيصات شائعة في الرعاية المركزة — اضغط لإضافتها:</div>
+      <div class="dx-chips" id="dxChips"></div>
+    </div>
+    <div class="field">
+      <label for="ptSymptoms">التاريخ المرضي والأعراض والعلامات <span class="opt">(History of present illness)</span></label>
+      <textarea id="ptSymptoms" rows="3" placeholder="مثال: Fever for 5 days, progressive dyspnea, poor feeding..."></textarea>
+      <div class="suggest-box" id="sxSuggest"></div>
     </div>
     <div class="field">
       <label for="ptSupport">الدعم التنفسي الحالي <span class="opt">(اختياري)</span></label>
@@ -398,25 +468,28 @@
         <option value="High-flow nasal cannula (HFNC)">High-flow nasal cannula (HFNC)</option>
         <option value="Non-invasive ventilation (CPAP / BiPAP)">Non-invasive ventilation (CPAP / BiPAP)</option>
         <option value="Invasive mechanical ventilation">Invasive mechanical ventilation</option>
+        <option value="High-frequency oscillatory ventilation (HFOV)">High-frequency oscillatory ventilation (HFOV)</option>
       </select>
     </div>
     <div class="field">
       <label for="ptLabs">أهم التحاليل والأشعة <span class="opt">(اختياري)</span></label>
       <textarea id="ptLabs" rows="2" placeholder="مثال: ABG: pH 7.28, PaCO2 58 — CXR: bilateral infiltrates — IgE 450"></textarea>
     </div>
+    <div class="field">
+      <label for="ptCultures">نتائج المزارع <span class="opt">(اختياري)</span></label>
+      <textarea id="ptCultures" rows="2" placeholder="مثال: Blood culture: Klebsiella pneumoniae — sensitive to Meropenem, resistant to Ceftriaxone"></textarea>
+    </div>
 
     <div class="section-head"><span class="num">3</span> العلاج المطلوب</div>
     <div class="field">
-      <label for="ptPrevTx">العلاجات السابقة وعدم الاستجابة لها <span class="opt">(اختياري — يقوّي الطلب)</span></label>
-      <textarea id="ptPrevTx" rows="2" placeholder="مثال: High-dose ICS + LABA لمدة 6 أشهر بدون تحسن، 3 دخولات رعاية خلال سنة"></textarea>
-    </div>
-    <div class="field">
       <label for="ptDrug">الدواء المطلوب والمبرر الطبي</label>
-      <textarea id="ptDrug" rows="2" placeholder="اسم الدواء والمبرر الطبي لاستخدامه"></textarea>
+      <textarea id="ptDrug" rows="2" placeholder="مثال: Colistin لعدوى Klebsiella مقاومة للكاربابينيم"></textarea>
+      <div class="hint">حساب تلقائي للجرعة متاح لـ: Colistin · Zavicefta · Aztreonam · Tygacil · IVIG</div>
     </div>
     <div class="field">
       <label for="ptDose">الجرعة، عدد المرات، ومدة العلاج <span class="opt">(اختياري)</span></label>
-      <input id="ptDose" placeholder="مثال: 150 mg SC كل 4 أسابيع لمدة 6 أشهر">
+      <textarea id="ptDose" rows="3" dir="ltr" placeholder="مثال: 150 mg SC كل 4 أسابيع لمدة 6 أشهر"></textarea>
+      <div class="dose-calc hidden" id="doseCalc"></div>
       <div class="hint">تُكتب الجرعة في التقرير كما أدخلتها تماماً دون تعديل.</div>
     </div>
 
@@ -462,9 +535,13 @@
     <div class="admin-head">
       <h2 class="card-title" style="margin:0">
         <span class="icon-badge"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg></span>
-        سجل التقارير
+        <span id="historyTitle">سجل التقارير</span>
       </h2>
       <button id="btnHistoryBack" class="btn-ghost btn-sm">← شاشة التقارير</button>
+    </div>
+    <div id="historyNote" class="note hidden">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <span>هذه تقاريرك المحفوظة للاطلاع والنسخ فقط — لا يمكن تعديلها أو حذفها بعد الحفظ.</span>
     </div>
     <div class="history-tools">
       <div class="chips" id="unitFilter"></div>
@@ -472,6 +549,51 @@
       <div id="historyCount" class="hint"></div>
     </div>
     <div id="historyList">جاري تحميل التقارير...</div>
+  </section>
+
+  <!-- حسابي: الملف الشخصي وتغيير كلمة المرور -->
+  <section id="profileBox" class="card hidden">
+    <div class="admin-head">
+      <h2 class="card-title" style="margin:0">
+        <span class="icon-badge"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.3-6 8-6s7 2 8 6"/></svg></span>
+        حسابي
+      </h2>
+      <button id="btnProfileBack" class="btn-ghost btn-sm">← شاشة التقارير</button>
+    </div>
+
+    <div class="profile-head">
+      <div class="avatar avatar-lg" id="profAvatar">د</div>
+      <div>
+        <div class="prof-name" id="profName"></div>
+        <div class="h-meta" id="profPos"></div>
+      </div>
+    </div>
+    <div class="prof-grid">
+      <div class="prof-item"><span>البريد الإلكتروني</span><b id="profEmail" dir="ltr"></b></div>
+      <div class="prof-item"><span>رقم الموبايل</span><b id="profMobile" dir="ltr"></b></div>
+      <div class="prof-item"><span>حالة الحساب</span><b id="profStatus"></b></div>
+      <div class="prof-item"><span>تاريخ التسجيل</span><b id="profSince"></b></div>
+      <div class="prof-item"><span>عدد التقارير المحفوظة</span><b id="profCount">—</b></div>
+    </div>
+    <div class="hint" style="margin-bottom:18px">لتعديل الاسم أو رقم الموبايل تواصل مع الإدارة.</div>
+
+    <div class="section-head"><span class="num">🔒</span> تغيير كلمة المرور</div>
+    <div class="field">
+      <label for="pwCurrent">كلمة المرور الحالية</label>
+      <input id="pwCurrent" type="password" dir="ltr" autocomplete="current-password">
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="pwNew">كلمة المرور الجديدة</label>
+        <input id="pwNew" type="password" dir="ltr" autocomplete="new-password" placeholder="على الأقل 6 أحرف">
+      </div>
+      <div class="field">
+        <label for="pwNew2">تأكيد كلمة المرور الجديدة</label>
+        <input id="pwNew2" type="password" dir="ltr" autocomplete="new-password">
+      </div>
+    </div>
+    <button id="btnChangePw">تغيير كلمة المرور</button>
+    <div id="pwStatus" class="save-status"></div>
   </section>
 
   </main>
@@ -495,8 +617,12 @@
       getAuth, 
       signInWithEmailAndPassword, 
       createUserWithEmailAndPassword, 
-      signOut, 
-      onAuthStateChanged 
+      signOut,
+      onAuthStateChanged,
+      sendPasswordResetEmail,
+      EmailAuthProvider,
+      reauthenticateWithCredential,
+      updatePassword
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { 
       getFirestore, 
@@ -511,6 +637,7 @@
       query,
       orderBy,
       limit,
+      where,
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
@@ -541,8 +668,18 @@
     const historyBox = document.getElementById("historyBox");
     const btnHistory = document.getElementById("btnHistory");
     const saveStatus = document.getElementById("saveStatus");
+    const profileBox = document.getElementById("profileBox");
+    const btnMyReports = document.getElementById("btnMyReports");
+    const btnProfile = document.getElementById("btnProfile");
     let currentProfile = null;
     let allReports = [];
+    let historyMode = "admin"; // "admin" = كل التقارير (مع الحذف) — "mine" = تقارير الطبيب فقط (اطلاع ونسخ فقط)
+
+    // عرض شاشة واحدة وإخفاء الباقي
+    function showScreen(box) {
+      [authBox, pendingBox, adminBox, mainBox, historyBox, profileBox].forEach((b) => b.classList.toggle("hidden", b !== box));
+      window.scrollTo({ top: 0 });
+    }
 
     // التبديل بين تبويب الدخول والتسجيل
     document.querySelectorAll(".tab").forEach((tab) => {
@@ -561,7 +698,10 @@
     function explainError(err) {
       const code = err && err.code ? err.code : "";
       const map = {
-        "auth/email-already-in-use": "هذا الاسم مسجل بالفعل. سجّل الدخول به أو أضف حرفاً/رقماً للاسم.",
+        "auth/email-already-in-use": "هذا البريد الإلكتروني مسجل بالفعل. سجّل الدخول به أو استخدم \"نسيت كلمة المرور؟\".",
+        "auth/missing-email": "يرجى إدخال البريد الإلكتروني.",
+        "auth/missing-password": "يرجى إدخال كلمة المرور.",
+        "auth/requires-recent-login": "لأسباب أمنية، يرجى تسجيل الخروج ثم الدخول مرة أخرى قبل تغيير كلمة المرور.",
         "auth/invalid-email": "البريد الإلكتروني غير صحيح.",
         "auth/weak-password": "كلمة المرور ضعيفة (6 أحرف على الأقل).",
         "auth/invalid-credential": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
@@ -582,37 +722,72 @@
 
     // تسجيل طبيب جديد
     document.getElementById("btnRegister").onclick = async () => {
-      const rawName = document.getElementById("regName").value.trim();
+      const fullName = document.getElementById("regName").value.trim().replace(/\s+/g, " ");
       const pos = document.getElementById("regPos").value;
-      const mobile = document.getElementById("regMobile").value.trim();
+      const email = document.getElementById("regEmail").value.trim().toLowerCase();
+      const mobile = document.getElementById("regMobile").value.replace(/[\s-]/g, "");
+      const pass = document.getElementById("regPass").value;
+      const pass2 = document.getElementById("regPass2").value;
 
-      if (!rawName || !mobile) {
-        alert("يرجى إدخال الاسم بالإنجليزية ورقم الموبايل.");
+      if (!fullName || !email || !mobile || !pass) {
+        alert("يرجى إدخال الاسم والبريد الإلكتروني ورقم الموبايل وكلمة المرور.");
+        return;
+      }
+      if (fullName.length < 3) {
+        alert("يرجى كتابة الاسم الكامل.");
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        alert("البريد الإلكتروني غير صحيح.");
+        return;
+      }
+      if (!/^\+?\d{10,15}$/.test(mobile)) {
+        alert("رقم الموبايل غير صحيح. مثال: 01012345678");
+        return;
+      }
+      if (pass.length < 6) {
+        alert("كلمة المرور يجب أن تكون 6 أحرف على الأقل.");
+        return;
+      }
+      if (pass !== pass2) {
+        alert("كلمتا المرور غير متطابقتين.");
         return;
       }
 
-      const cleanName = rawName.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (cleanName.length < 3) {
-        alert("يرجى كتابة الاسم بحروف إنجليزية (3 حروف على الأقل)، مثال: Ahmed Mohamed");
-        return;
-      }
-      const email = `${cleanName}@picu.com`;
-      const pass = `${cleanName}123`;
-
+      const btn = document.getElementById("btnRegister");
+      btn.disabled = true;
       try {
         const cred = await createUserWithEmailAndPassword(auth, email, pass);
         await setDoc(doc(db, "users", cred.user.uid), {
-          fullName: rawName,
+          fullName,
           position: pos,
-          mobile: mobile,
-          email: email,
+          mobile,
+          email,
           isApproved: false,
           createdAt: new Date().toISOString()
         });
-
-        alert(`تم تقديم طلب التسجيل بنجاح!\n\nبيانات الدخول الخاصة بك:\nالبريد: ${email}\nكلمة المرور: ${pass}\n\nيرجى حفظها لتسجيل الدخول بعد التفعيل.`);
+        ["regName", "regEmail", "regMobile", "regPass", "regPass2"].forEach((id) => { document.getElementById(id).value = ""; });
+        alert("تم تقديم طلب التسجيل بنجاح!\nسيتم مراجعة طلبك من الإدارة، وبعد التفعيل يمكنك الدخول بالبريد وكلمة المرور التي اخترتها.");
       } catch (err) {
         alert("خطأ أثناء إنشاء الحساب: " + explainError(err));
+      } finally {
+        btn.disabled = false;
+      }
+    };
+
+    // نسيت كلمة المرور
+    document.getElementById("btnForgot").onclick = async () => {
+      const email = document.getElementById("loginEmail").value.trim();
+      if (!email) {
+        alert("اكتب بريدك الإلكتروني في خانة البريد أولاً، ثم اضغط \"نسيت كلمة المرور؟\".");
+        document.getElementById("loginEmail").focus();
+        return;
+      }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        alert(`إذا كان البريد ${email} مسجلاً لدينا، فستصلك رسالة لإعادة تعيين كلمة المرور خلال دقائق (تحقق من مجلد Spam أيضاً).`);
+      } catch (err) {
+        alert("تعذر إرسال رسالة الاستعادة: " + explainError(err));
       }
     };
 
@@ -640,15 +815,22 @@
       adminBox.classList.add("hidden");
       mainBox.classList.add("hidden");
       historyBox.classList.add("hidden");
+      profileBox.classList.add("hidden");
       btnAdminPanel.classList.add("hidden");
       btnHistory.classList.add("hidden");
+      btnMyReports.classList.add("hidden");
+      btnProfile.classList.add("hidden");
       currentProfile = null;
       allReports = [];
+      ["pwCurrent", "pwNew", "pwNew2"].forEach((id) => { document.getElementById(id).value = ""; });
+      document.getElementById("pwStatus").textContent = "";
       // مسح بيانات المريض والتقرير عند تغيير المستخدم (خصوصية الأجهزة المشتركة)
-      ["ptName", "ptAgeY", "ptAgeM", "ptAgeD", "ptWeight", "ptAdmission", "ptHistory", "ptSupport", "ptLabs", "ptPrevTx", "ptDrug", "ptDose", "reportOutput"]
+      ["ptName", "ptAgeY", "ptAgeM", "ptAgeD", "ptWeight", "ptAdmission", "ptHistory", "ptSymptoms", "ptSupport", "ptLabs", "ptCultures", "ptDrug", "ptDose", "reportOutput"]
         .forEach((id) => { document.getElementById(id).value = ""; });
       document.querySelectorAll('input[name="ptUnit"]').forEach((r) => { r.checked = false; });
       document.getElementById("unitPicker").classList.remove("invalid");
+      renderDxChips();
+      renderDoseCalc();
       document.getElementById("reportOutput").readOnly = true;
       document.getElementById("btnSave").disabled = true;
       document.getElementById("missingNote").classList.add("hidden");
@@ -663,9 +845,10 @@
       if (user.email === ADMIN_EMAIL) {
         btnAdminPanel.classList.remove("hidden");
         btnHistory.classList.remove("hidden");
+        btnProfile.classList.remove("hidden");
         userBadge.textContent = "المدير المسؤول";
         avatar.textContent = "م";
-        currentProfile = { fullName: "المدير المسؤول", position: "الإدارة" };
+        currentProfile = { fullName: "المدير المسؤول", position: "الإدارة", email: user.email, isAdmin: true };
         mainBox.classList.remove("hidden");
         return;
       }
@@ -677,6 +860,8 @@
           currentProfile = snap.data();
           userBadge.textContent = `${snap.data().fullName} (${snap.data().position})`;
           avatar.textContent = (snap.data().fullName || "د").trim().charAt(0).toUpperCase();
+          btnMyReports.classList.remove("hidden");
+          btnProfile.classList.remove("hidden");
           mainBox.classList.remove("hidden");
         } else {
           pendingBox.classList.remove("hidden");
@@ -694,16 +879,11 @@
 
     // لوحة تحكم الإدارة
     btnAdminPanel.onclick = () => {
-      mainBox.classList.add("hidden");
-      historyBox.classList.add("hidden");
-      adminBox.classList.remove("hidden");
+      showScreen(adminBox);
       loadAdminUsers();
     };
 
-    document.getElementById("btnSwitchToApp").onclick = () => {
-      adminBox.classList.add("hidden");
-      mainBox.classList.remove("hidden");
-    };
+    document.getElementById("btnSwitchToApp").onclick = () => showScreen(mainBox);
 
     // ===== سجل التقارير (للمدير فقط) =====
     async function saveReport(r) {
@@ -766,7 +946,7 @@
       const listEl = document.getElementById("historyList");
       const q = document.getElementById("historySearch").value.trim().toLowerCase();
       const inUnit = allReports.filter((r) => unitFilter === "all" || unitOf(r) === unitFilter);
-      const items = inUnit.filter((r) => !q || [r.patientName, r.doctorName, r.history, r.drug, r.labs, r.prevTx]
+      const items = inUnit.filter((r) => !q || [r.patientName, r.doctorName, r.history, r.symptoms, r.drug, r.labs, r.cultures, r.prevTx]
         .some((v) => String(v || "").toLowerCase().includes(q)));
 
       const scope = unitFilter === "all" ? "" : ` — ${unitFilter}`;
@@ -793,8 +973,10 @@
                 ["الوزن", r.weight],
                 ["دخول الرعاية / المدة", r.admission],
                 ["التشخيص", r.history],
+                ["الأعراض والعلامات", r.symptoms],
                 ["الدعم التنفسي", r.support],
                 ["التحاليل والأشعة", r.labs],
+                ["نتائج المزارع", r.cultures],
                 ["العلاجات السابقة", r.prevTx],
                 ["العلاج المطلوب", r.drug],
                 ["الجرعة والمدة", r.dose]
@@ -803,36 +985,107 @@
             <div class="h-text">${esc(r.reportText)}</div>
             <div class="h-actions">
               <button class="btn-sm" data-action="copy" data-id="${r.id}">نسخ التقرير</button>
-              <button class="btn-sm btn-danger" data-action="delete" data-id="${r.id}">حذف</button>
+              ${historyMode === "admin" ? `<button class="btn-sm btn-danger" data-action="delete" data-id="${r.id}">حذف</button>` : ""}
             </div>
           </div>
         </details>
       `).join("");
     }
 
+    // تحميل التقارير: المدير يرى الكل، الطبيب يرى تقاريره فقط
+    async function fetchReports(mode) {
+      const q = mode === "admin"
+        ? query(collection(db, "reports"), orderBy("createdAt", "desc"), limit(1000))
+        : query(collection(db, "reports"), where("uid", "==", auth.currentUser.uid), limit(1000));
+      const snap = await getDocs(q);
+      const ms = (r) => (r.createdAt && r.createdAt.toMillis ? r.createdAt.toMillis() : 0);
+      return snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b) - ms(a));
+    }
+
     async function loadHistory() {
       const listEl = document.getElementById("historyList");
       listEl.textContent = "جاري تحميل التقارير...";
+      document.getElementById("unitFilter").innerHTML = "";
+      document.getElementById("historyCount").textContent = "";
       try {
-        const snap = await getDocs(query(collection(db, "reports"), orderBy("createdAt", "desc"), limit(1000)));
-        allReports = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        allReports = await fetchReports(historyMode);
         renderHistory();
       } catch (err) {
         listEl.textContent = "تعذر تحميل السجل: " + explainError(err);
       }
     }
 
-    btnHistory.onclick = () => {
+    function openHistory(mode) {
+      historyMode = mode;
       unitFilter = "all";
-      mainBox.classList.add("hidden");
-      adminBox.classList.add("hidden");
-      historyBox.classList.remove("hidden");
+      allReports = [];
+      document.getElementById("historySearch").value = "";
+      document.getElementById("historyTitle").textContent = mode === "admin" ? "سجل التقارير" : "تقاريري";
+      document.getElementById("historyNote").classList.toggle("hidden", mode === "admin");
+      showScreen(historyBox);
       loadHistory();
+    }
+
+    btnHistory.onclick = () => openHistory("admin");
+    btnMyReports.onclick = () => openHistory("mine");
+
+    document.getElementById("btnHistoryBack").onclick = () => showScreen(mainBox);
+
+    // ===== حسابي =====
+    btnProfile.onclick = async () => {
+      const p = currentProfile || {};
+      const name = p.fullName || "";
+      document.getElementById("profAvatar").textContent = (name || "د").trim().charAt(0).toUpperCase();
+      document.getElementById("profName").textContent = name;
+      document.getElementById("profPos").textContent = p.position || "";
+      document.getElementById("profEmail").textContent = auth.currentUser?.email || p.email || "—";
+      document.getElementById("profMobile").textContent = p.mobile || "—";
+      document.getElementById("profStatus").textContent = p.isAdmin ? "مدير النظام" : (p.isApproved ? "مفعّل ✓" : "قيد المراجعة");
+      document.getElementById("profSince").textContent = p.createdAt
+        ? new Date(p.createdAt).toLocaleDateString("ar-EG", { dateStyle: "long" })
+        : "—";
+      const countEl = document.getElementById("profCount");
+      countEl.textContent = "...";
+      showScreen(profileBox);
+      try {
+        countEl.textContent = String((await fetchReports(p.isAdmin ? "admin" : "mine")).length);
+      } catch (err) {
+        countEl.textContent = "—";
+      }
     };
 
-    document.getElementById("btnHistoryBack").onclick = () => {
-      historyBox.classList.add("hidden");
-      mainBox.classList.remove("hidden");
+    document.getElementById("btnProfileBack").onclick = () => showScreen(mainBox);
+
+    document.getElementById("btnChangePw").onclick = async () => {
+      const cur = document.getElementById("pwCurrent").value;
+      const nw = document.getElementById("pwNew").value;
+      const nw2 = document.getElementById("pwNew2").value;
+      const st = document.getElementById("pwStatus");
+      const fail = (msg) => { st.className = "save-status err"; st.textContent = msg; };
+
+      if (!cur || !nw) return fail("يرجى إدخال كلمة المرور الحالية والجديدة.");
+      if (nw.length < 6) return fail("كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل.");
+      if (nw !== nw2) return fail("كلمتا المرور الجديدتان غير متطابقتين.");
+      if (nw === cur) return fail("كلمة المرور الجديدة يجب أن تختلف عن الحالية.");
+
+      const btn = document.getElementById("btnChangePw");
+      btn.disabled = true;
+      st.className = "save-status";
+      st.textContent = "جاري تغيير كلمة المرور...";
+      try {
+        const user = auth.currentUser;
+        await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, cur));
+        await updatePassword(user, nw);
+        ["pwCurrent", "pwNew", "pwNew2"].forEach((id) => { document.getElementById(id).value = ""; });
+        st.className = "save-status ok";
+        st.textContent = "✓ تم تغيير كلمة المرور بنجاح. استخدم الجديدة في المرة القادمة.";
+      } catch (err) {
+        fail(err.code === "auth/invalid-credential" || err.code === "auth/wrong-password"
+          ? "كلمة المرور الحالية غير صحيحة."
+          : "تعذر تغيير كلمة المرور: " + explainError(err));
+      } finally {
+        btn.disabled = false;
+      }
     };
 
     document.getElementById("historySearch").oninput = renderHistory;
@@ -849,7 +1102,7 @@
         setTimeout(() => { btn.textContent = "نسخ التقرير"; }, 2000);
       }
 
-      if (btn.dataset.action === "delete") {
+      if (btn.dataset.action === "delete" && historyMode === "admin") {
         if (!confirm(`حذف تقرير المريض "${r.patientName}" نهائياً؟`)) return;
         try {
           await deleteDoc(doc(db, "reports", r.id));
@@ -943,6 +1196,241 @@
       r.addEventListener("change", () => document.getElementById("unitPicker").classList.remove("invalid"));
     });
 
+    // ===== اقتراحات التشخيص الشائعة في الرعاية المركزة للأطفال =====
+    const DX_COMMON = [
+      "Septic shock", "Sepsis", "ARDS", "Severe pneumonia", "Status asthmaticus", "Severe Persistent Asthma",
+      "Bronchiolitis", "Heart failure", "Myocarditis", "Congenital heart disease", "Status epilepticus",
+      "Meningitis / Encephalitis", "DKA", "SLE", "MIS-C", "Acute kidney injury"
+    ];
+    const DX_MORE = [
+      "Cardiogenic shock", "Hypovolemic shock", "Pulmonary hypertension", "Arrhythmia (SVT)", "Kawasaki disease",
+      "Lupus nephritis", "Juvenile dermatomyositis", "HLH", "Nephrotic syndrome", "Acute liver failure",
+      "Guillain-Barré syndrome", "Myasthenic crisis", "Traumatic brain injury", "Raised ICP", "Croup / Upper airway obstruction",
+      "Pertussis", "Dengue shock", "Tumor lysis syndrome", "Febrile neutropenia", "Sickle cell crisis",
+      "Inborn error of metabolism", "Poisoning / Toxic ingestion", "Near drowning", "Burns", "Post-cardiac surgery",
+      "Spinal muscular atrophy (SMA)", "Ventilator-associated pneumonia"
+    ];
+    // الأعراض والعلامات المقترحة لكل تشخيص
+    const SX_MAP = {
+      "Septic shock": ["Fever / hypothermia", "Tachycardia", "Hypotension", "Prolonged capillary refill (>3 sec)", "Cold mottled extremities", "Weak peripheral pulses", "Altered consciousness", "Oliguria", "Elevated serum lactate", "Requiring inotropic / vasopressor support"],
+      "Sepsis": ["Fever", "Tachycardia", "Tachypnea", "Lethargy", "Poor feeding", "Leukocytosis / leukopenia", "Elevated CRP and procalcitonin", "Positive blood culture"],
+      "ARDS": ["Severe respiratory distress", "Tachypnea", "Hypoxemia refractory to oxygen therapy", "Bilateral crepitations", "Bilateral diffuse infiltrates on chest X-ray", "Low PaO2/FiO2 ratio", "Requiring mechanical ventilation with high PEEP"],
+      "Severe pneumonia": ["Fever", "Cough", "Tachypnea", "Subcostal and intercostal retractions", "Nasal flaring", "Grunting", "Diminished air entry", "Crepitations / bronchial breathing", "Hypoxemia", "Lobar consolidation on chest X-ray"],
+      "Status asthmaticus": ["Severe wheezing", "Tachypnea", "Use of accessory muscles", "Inability to speak or feed", "Hypoxemia", "Silent chest", "Poor response to repeated bronchodilators and systemic steroids"],
+      "Severe Persistent Asthma": ["Daily symptoms", "Frequent night awakenings", "Recurrent exacerbations requiring hospitalization / PICU admission", "Chronic cough and wheezing", "Limitation of daily activities", "Poor control despite high-dose ICS + LABA", "Frequent courses of systemic steroids"],
+      "Bronchiolitis": ["Rhinorrhea", "Cough", "Wheezing", "Tachypnea", "Subcostal retractions", "Fine crepitations", "Poor feeding", "Apnea (young infants)", "Hypoxemia"],
+      "Heart failure": ["Dyspnea", "Tachypnea", "Tachycardia", "Fine basal crepitations", "Tender hepatomegaly", "Gallop rhythm", "Sweating and fatigue during feeding", "Failure to thrive", "Edema", "Cardiomegaly on chest X-ray", "Reduced ejection fraction on echocardiography"],
+      "Myocarditis": ["Recent viral illness", "Tachycardia disproportionate to fever", "Chest pain", "Dyspnea", "Gallop rhythm", "Hepatomegaly", "Arrhythmia", "Elevated troponin", "Reduced ejection fraction on echocardiography"],
+      "Congenital heart disease": ["Cyanosis", "Cardiac murmur", "Tachypnea", "Poor feeding", "Failure to thrive", "Recurrent chest infections", "Hepatomegaly", "Confirmed by echocardiography"],
+      "Status epilepticus": ["Continuous seizure for more than 5 minutes", "Recurrent seizures without regaining consciousness", "Generalized tonic-clonic convulsions", "Altered level of consciousness", "Refractory to first- and second-line anticonvulsants", "Requiring airway protection"],
+      "Meningitis / Encephalitis": ["Fever", "Headache", "Vomiting", "Neck stiffness", "Altered consciousness", "Seizures", "Bulging anterior fontanelle", "Positive Kernig / Brudzinski signs", "Abnormal CSF analysis"],
+      "DKA": ["Polyuria and polydipsia", "Vomiting", "Abdominal pain", "Kussmaul breathing", "Dehydration", "Altered consciousness", "Hyperglycemia", "Metabolic acidosis (low pH and bicarbonate)", "Ketonuria / ketonemia"],
+      "SLE": ["Prolonged fever", "Malar rash", "Arthritis / arthralgia", "Oral ulcers", "Fatigue and weight loss", "Proteinuria / nephritis", "Cytopenias", "Positive ANA and anti-dsDNA", "Low complement (C3, C4)"],
+      "MIS-C": ["Persistent fever", "Rash", "Bilateral conjunctival injection", "Abdominal pain, vomiting, diarrhea", "Shock", "Myocardial dysfunction", "Markedly elevated inflammatory markers", "Recent SARS-CoV-2 infection or exposure"],
+      "Acute kidney injury": ["Oliguria / anuria", "Edema", "Hypertension", "Fluid overload", "Rising serum creatinine", "Hyperkalemia", "Metabolic acidosis"],
+      "Cardiogenic shock": ["Hypotension", "Tachycardia", "Cold extremities", "Weak peripheral pulses", "Hepatomegaly", "Pulmonary edema", "Oliguria", "Severely reduced ejection fraction"],
+      "Hypovolemic shock": ["History of fluid loss (vomiting / diarrhea / bleeding)", "Tachycardia", "Hypotension", "Sunken eyes", "Dry mucous membranes", "Prolonged capillary refill", "Oliguria"],
+      "Pulmonary hypertension": ["Dyspnea", "Cyanosis", "Loud P2", "Hepatomegaly", "Syncope", "Right ventricular hypertrophy", "Elevated pulmonary artery pressure on echocardiography"],
+      "Arrhythmia (SVT)": ["Palpitations", "Very rapid heart rate (>220/min in infants, >180/min in children)", "Irritability", "Poor feeding", "Pallor", "Signs of heart failure"],
+      "Kawasaki disease": ["Fever for 5 days or more", "Bilateral non-purulent conjunctivitis", "Strawberry tongue and cracked lips", "Polymorphous rash", "Edema / desquamation of hands and feet", "Cervical lymphadenopathy", "Coronary artery changes on echocardiography"],
+      "Lupus nephritis": ["Edema", "Hypertension", "Hematuria", "Proteinuria", "Rising serum creatinine", "Active lupus features", "Renal biopsy-proven nephritis"],
+      "Juvenile dermatomyositis": ["Proximal muscle weakness", "Heliotrope rash", "Gottron papules", "Elevated muscle enzymes (CK)", "Dysphagia", "Respiratory muscle weakness"],
+      "HLH": ["Persistent fever", "Hepatosplenomegaly", "Cytopenias", "Very high serum ferritin", "Hypertriglyceridemia", "Hypofibrinogenemia", "Elevated liver enzymes", "Hemophagocytosis on bone marrow"],
+      "Nephrotic syndrome": ["Generalized edema", "Heavy proteinuria", "Hypoalbuminemia", "Hyperlipidemia", "Ascites", "Oliguria", "Steroid-resistant / steroid-dependent course"],
+      "Acute liver failure": ["Jaundice", "Coagulopathy (INR > 2)", "Hepatic encephalopathy", "Hypoglycemia", "Markedly elevated liver enzymes", "Ascites"],
+      "Guillain-Barré syndrome": ["Ascending flaccid weakness", "Areflexia", "Recent preceding infection", "Respiratory muscle weakness", "Bulbar weakness", "Autonomic instability", "Albuminocytologic dissociation in CSF"],
+      "Myasthenic crisis": ["Generalized muscle weakness", "Ptosis", "Diplopia", "Dysphagia", "Bulbar weakness", "Respiratory failure requiring ventilatory support"],
+      "Traumatic brain injury": ["History of head trauma", "Decreased GCS", "Vomiting", "Seizures", "Pupillary changes", "Abnormal CT brain"],
+      "Raised ICP": ["Headache", "Vomiting", "Decreased level of consciousness", "Papilledema", "Bradycardia with hypertension (Cushing triad)", "Pupillary changes", "Bulging anterior fontanelle"],
+      "Croup / Upper airway obstruction": ["Barking cough", "Inspiratory stridor", "Hoarseness of voice", "Suprasternal retractions", "Respiratory distress", "Hypoxemia"],
+      "Pertussis": ["Paroxysmal cough", "Inspiratory whoop", "Post-tussive vomiting", "Apnea", "Cyanotic spells", "Marked lymphocytosis"],
+      "Dengue shock": ["Fever", "Bleeding manifestations", "Abdominal pain", "Hepatomegaly", "Plasma leakage (pleural effusion / ascites)", "Rising hematocrit", "Thrombocytopenia", "Hypotension"],
+      "Tumor lysis syndrome": ["Recent chemotherapy", "Hyperkalemia", "Hyperuricemia", "Hyperphosphatemia", "Hypocalcemia", "Oliguria / acute kidney injury", "Arrhythmia"],
+      "Febrile neutropenia": ["Fever ≥ 38.3 °C", "Absolute neutrophil count < 500/mm³", "Recent chemotherapy", "Chills / rigors", "Mucositis", "Hemodynamic instability"],
+      "Sickle cell crisis": ["Severe pain", "Acute chest syndrome (chest pain, hypoxemia, new infiltrate)", "Pallor", "Jaundice", "Splenic sequestration", "Falling hemoglobin"],
+      "Inborn error of metabolism": ["Poor feeding", "Recurrent vomiting", "Lethargy", "Seizures", "Hypoglycemia", "Hyperammonemia", "Metabolic acidosis", "Positive family history / consanguinity"],
+      "Poisoning / Toxic ingestion": ["History of ingestion", "Altered consciousness", "Vomiting", "Seizures", "Arrhythmia", "Respiratory depression"],
+      "Near drowning": ["History of submersion", "Hypoxemia", "Respiratory distress", "Crepitations", "Altered consciousness", "Hypothermia"],
+      "Burns": ["Extensive total body surface area burn", "Inhalation injury", "Hypovolemia", "Severe pain", "High risk of infection and sepsis"],
+      "Post-cardiac surgery": ["Low cardiac output state", "Arrhythmias", "Postoperative bleeding", "Need for inotropic support", "Prolonged mechanical ventilation", "Pleural / pericardial effusion"],
+      "Spinal muscular atrophy (SMA)": ["Hypotonia", "Progressive proximal muscle weakness", "Absent deep tendon reflexes", "Tongue fasciculations", "Weak cry and cough", "Feeding difficulty", "Respiratory failure", "Confirmed SMN1 gene deletion"],
+      "Ventilator-associated pneumonia": ["New fever while on mechanical ventilation", "Increased purulent tracheal secretions", "New infiltrate on chest X-ray", "Worsening oxygenation", "Leukocytosis", "Positive tracheal aspirate culture"]
+    };
+    const ptSymptomsEl = document.getElementById("ptSymptoms");
+    const listParts = (s) => s.split(/,\s*|\n+/).map((x) => x.trim()).filter(Boolean);
+
+    function renderSymptomSuggestions() {
+      const box = document.getElementById("sxSuggest");
+      const chosen = listParts(document.getElementById("ptHistory").value)
+        .map((p) => Object.keys(SX_MAP).find((k) => k.toLowerCase() === p.toLowerCase()))
+        .filter(Boolean);
+      if (!chosen.length) {
+        box.innerHTML = `<div class="hint">اختر تشخيصاً من الأعلى لعرض الأعراض والعلامات المقترحة.</div>`;
+        return;
+      }
+      const have = listParts(ptSymptomsEl.value).map((x) => x.toLowerCase());
+      box.innerHTML = `<div class="hint">أعراض وعلامات مقترحة — اضغط لإضافتها:</div>` + chosen.map((dx) => `
+        <div class="sx-group">
+          <div class="sx-title">${esc(dx)}</div>
+          <div class="sx-chips">${SX_MAP[dx].map((sx) =>
+            `<button type="button" class="sx-chip ${have.includes(sx.toLowerCase()) ? "on" : ""}" data-sx="${esc(sx)}">${esc(sx)}</button>`).join("")}
+          </div>
+        </div>`).join("");
+    }
+
+    document.getElementById("sxSuggest").onclick = (e) => {
+      const chip = e.target.closest("button[data-sx]");
+      if (!chip) return;
+      const sx = chip.dataset.sx;
+      const parts = listParts(ptSymptomsEl.value);
+      const idx = parts.findIndex((s) => s.toLowerCase() === sx.toLowerCase());
+      if (idx >= 0) parts.splice(idx, 1); else parts.push(sx);
+      ptSymptomsEl.value = parts.join(", ");
+      renderSymptomSuggestions();
+    };
+    ptSymptomsEl.addEventListener("input", renderSymptomSuggestions);
+
+    // ===== حاسبة الجرعات (حسب بروتوكول الوحدة) =====
+    // perKg = الجرعة لكل كجم للمرة الواحدة (أو مصفوفة اختيارات) — conc = التركيز (لكل مل) — max = أقصى جرعة للمرة الواحدة
+    const COURSE = "for 2 weeks";
+    const DRUGS = [
+      { name: "Colistin", match: /colistin|colomycin|coly-?mycin|كوليستين|كولستين/i,
+        unit: "IU", perKg: [50000], everyH: 8, max: 3000000,
+        conc: 500000, vialAmount: 1000000, vialLabel: "1 MIU / 2 mL" },
+      { name: "Zavicefta (ceftazidime-avibactam)", match: /zavicefta|avycaz|ceftazidime.?avibactam|زافيسفتا|زافسيفتا/i,
+        unit: "mg", perKg: [50], everyH: 8, max: 2000,
+        conc: 200, vialAmount: 2000, vialLabel: "2 g / 10 mL" },
+      { name: "Aztreonam", match: /aztreonam|azactam|أزتريونام|ازتريونام/i,
+        unit: "mg", perKg: [30], everyH: 8, max: 2000,
+        conc: 100, vialAmount: 1000, vialLabel: "1 g / 10 mL" },
+      { name: "Tygacil (tigecycline)", match: /tygacil|tigecycline|تيجاسيل|تايجاسيل|تيجيسيكلين/i,
+        unit: "mg", perKg: [1.2, 1.5, 2], everyH: 12, max: 50,
+        conc: 10, vialAmount: 50, vialLabel: "50 mg / 5 mL" },
+      { name: "IVIG", match: /\bivig\b|immuno-?globulin|octagam|gammagard|privigen|مناعي|جلوبيولين/i, ivig: true }
+    ];
+
+    const fmtNum = (n, d = 1) => Number(n.toFixed(n < 1 ? 2 : d)).toLocaleString("en-US");
+    const fmtAmount = (n, unit) => unit === "IU" ? `${Math.round(n).toLocaleString("en-US")} IU` : `${fmtNum(n)} mg`;
+    const fmtPerKg = (d, k) => `${d.unit === "IU" ? k.toLocaleString("en-US") + " IU" : k + " mg"}/kg/dose`;
+    const shortName = (d) => d.name.split(" (")[0];
+
+    // حساب جرعة واحدة لاختيار معيّن (mg/kg أو IU/kg)
+    function calcOption(d, wt, perKg) {
+      const raw = perKg * wt;
+      const dose = Math.min(raw, d.max);
+      const timesPerDay = 24 / d.everyH;
+      const ml = dose / d.conc;
+      const daily = dose * timesPerDay;
+      const dailyMl = ml * timesPerDay;
+      const vialsPerDay = Math.ceil(daily / d.vialAmount - 1e-9);
+      const capped = raw > d.max;
+      const text = `${shortName(d)} ${fmtAmount(dose, d.unit)} (${fmtNum(ml)} mL) IV every ${d.everyH} hours` +
+        ` — daily ${fmtAmount(daily, d.unit)} (${fmtNum(dailyMl)} mL) = ${vialsPerDay} ${vialsPerDay === 1 ? "vial" : "vials"}/day (${d.vialLabel}) ${COURSE}`;
+      return { perKg, dose, ml, timesPerDay, daily, dailyMl, vialsPerDay, capped, text };
+    }
+
+    function calcDrug(d, wt) {
+      if (d.ivig) {
+        return {
+          d,
+          options: [0.5, 1, 2].map((gk) => ({ label: `${gk} g/kg`, text: `IVIG ${fmtNum(wt * gk)} g IV (${gk} g/kg × ${fmtNum(wt)} kg)`, grams: wt * gk }))
+        };
+      }
+      return { d, options: d.perKg.map((k) => calcOption(d, wt, k)) };
+    }
+
+    function renderDoseCalc() {
+      const box = document.getElementById("doseCalc");
+      const doseEl = document.getElementById("ptDose");
+      const found = DRUGS.filter((d) => d.match.test(val("ptDrug")));
+      if (!found.length) {
+        box.classList.add("hidden");
+        doseEl.placeholder = "مثال: 150 mg SC كل 4 أسابيع لمدة 6 أشهر";
+        doseEl.rows = 3;
+        return;
+      }
+      box.classList.remove("hidden");
+      const wt = parseFloat(val("ptWeight"));
+      if (!(wt > 0)) {
+        box.innerHTML = `<div class="dc-title">🧮 حاسبة الجرعة</div><div class="dc-warn">أدخل وزن الطفل (كجم) في بيانات المريض لحساب جرعة ${found.map((d) => esc(shortName(d))).join(" و ")} تلقائياً.</div>`;
+        doseEl.placeholder = "أدخل الوزن لحساب الجرعة المقترحة";
+        return;
+      }
+
+      const results = found.map((d) => calcDrug(d, wt));
+      // الاقتراح الرمادي داخل خانة الجرعة: أول اختيار لكل دواء (وIVIG 2 جم/كجم)
+      doseEl.placeholder = results.map((r) => r.d.ivig ? r.options[2].text + " — range 0.5–2 g/kg" : r.options[0].text).join("\n");
+      doseEl.rows = Math.min(8, Math.max(3, results.length * 2 + 1));
+
+      box.innerHTML = `<div class="dc-title">🧮 الجرعة المقترحة لوزن ${fmtNum(wt)} كجم</div>` + results.map((r, i) => {
+        if (r.d.ivig) {
+          return `<div class="dc-drug">
+            <div class="dc-name">IVIG <span class="h-meta">(0.5 – 2 g/kg)</span></div>
+            <div class="dc-lines">${r.options.map((o) => `${o.label} → <b>${fmtNum(o.grams)} g</b>`).join("<br>")}</div>
+            <div class="dc-btns">${r.options.map((o, j) =>
+              `<button type="button" class="btn-sm btn-ghost" data-use="${i}" data-opt="${j}">استخدام <bdi dir="ltr">${esc(o.label)}</bdi></button>`).join("")}</div>
+          </div>`;
+        }
+        const d = r.d;
+        const multi = r.options.length > 1;
+        return `<div class="dc-drug">
+          <div class="dc-name">${esc(d.name)} <span class="h-meta">(${multi ? `${d.perKg[0]}–${d.perKg[d.perKg.length - 1]} mg/kg/dose` : fmtPerKg(d, d.perKg[0])} every ${d.everyH} h — vial ${esc(d.vialLabel)})</span></div>
+          ${r.options.map((o, j) => `
+            <div class="dc-lines">
+              ${multi ? `<b>${fmtPerKg(d, o.perKg)}</b><br>` : ""}
+              Dose: <b>${fmtAmount(o.dose, d.unit)}</b> = <b>${fmtNum(o.ml)} mL</b> every ${d.everyH} h (${o.timesPerDay} times/day)<br>
+              Daily: <b>${fmtAmount(o.daily, d.unit)}</b> = <b>${fmtNum(o.dailyMl)} mL</b> = <b>${o.vialsPerDay} ${o.vialsPerDay === 1 ? "vial" : "vials"}/day</b> — ${COURSE}
+            </div>
+            ${o.capped ? `<div class="dc-warn">⚠️ تم تطبيق الحد الأقصى للجرعة (${fmtAmount(d.max, d.unit)} للمرة الواحدة).</div>` : ""}
+            <div class="dc-btns"><button type="button" class="btn-sm btn-ghost" data-use="${i}" data-opt="${j}">استخدام ${multi ? `<bdi dir="ltr">${esc(fmtPerKg(d, o.perKg))}</bdi>` : "هذه الجرعة"}</button></div>
+          `).join("")}
+        </div>`;
+      }).join("") + `<div class="dc-note">الجرعات استرشادية حسب بروتوكول الوحدة ويجب مراجعتها من الطبيب المعالج. اضغط "استخدام" لنقلها إلى خانة الجرعة، ويمكنك تعديلها.</div>`;
+      box.dataset.results = JSON.stringify(results.map((r) => r.options.map((o) => o.text)));
+    }
+
+    document.getElementById("doseCalc").onclick = (e) => {
+      const btn = e.target.closest("button[data-use]");
+      if (!btn) return;
+      const texts = JSON.parse(document.getElementById("doseCalc").dataset.results || "[]")[+btn.dataset.use] || [];
+      const line = texts[+(btn.dataset.opt || 0)];
+      if (!line) return;
+      const doseEl = document.getElementById("ptDose");
+      const lines = doseEl.value.split("\n").map((l) => l.trim()).filter(Boolean);
+      const drugKey = line.split(" ")[0].toLowerCase();
+      const idx = lines.findIndex((l) => l.toLowerCase().startsWith(drugKey));
+      if (idx >= 0) lines[idx] = line; else lines.push(line);
+      doseEl.value = lines.join("\n");
+    };
+    ["ptDrug", "ptWeight"].forEach((id) => document.getElementById(id).addEventListener("input", renderDoseCalc));
+
+    let dxShowMore = false;
+    const ptHistoryEl = document.getElementById("ptHistory");
+    const hasDx = (dx) => ptHistoryEl.value.toLowerCase().split(/[,\n،]+/).map((s) => s.trim()).includes(dx.toLowerCase());
+
+    function renderDxChips() {
+      const list = dxShowMore ? DX_COMMON.concat(DX_MORE) : DX_COMMON;
+      document.getElementById("dxChips").innerHTML =
+        list.map((dx) => `<button type="button" class="dx-chip ${hasDx(dx) ? "on" : ""}" data-dx="${esc(dx)}">${esc(dx)}</button>`).join("") +
+        `<button type="button" class="dx-more" data-more="1">${dxShowMore ? "عرض أقل" : `+ المزيد (${DX_MORE.length})`}</button>`;
+      renderSymptomSuggestions();
+    }
+
+    document.getElementById("dxChips").onclick = (e) => {
+      const more = e.target.closest("button[data-more]");
+      if (more) { dxShowMore = !dxShowMore; renderDxChips(); return; }
+      const chip = e.target.closest("button[data-dx]");
+      if (!chip) return;
+      const dx = chip.dataset.dx;
+      const parts = ptHistoryEl.value.split(/,\s*/).map((s) => s.trim()).filter(Boolean);
+      const idx = parts.findIndex((s) => s.toLowerCase() === dx.toLowerCase());
+      if (idx >= 0) parts.splice(idx, 1); else parts.push(dx);
+      ptHistoryEl.value = parts.join(", ");
+      renderDxChips();
+    };
+    ptHistoryEl.addEventListener("input", renderDxChips);
+    renderDxChips();
+
     function updateMissingNote() {
       missingNote.classList.toggle("hidden", !/\[\s*يُ?ستكمل/.test(output.value));
     }
@@ -955,10 +1443,11 @@
         `- السن: ${c.patientAge}`,
         c.weight && `- الوزن: ${c.weight}`,
         c.admission && `- دخول الرعاية المركزة / مدة الإقامة: ${c.admission}`,
-        `- التشخيص والتاريخ المرضي: ${c.history}`,
+        `- التشخيص: ${c.history}`,
+        c.symptoms && `- التاريخ المرضي والأعراض والعلامات: ${c.symptoms}`,
         c.support && `- الدعم التنفسي الحالي: ${c.support}`,
         c.labs && `- أهم التحاليل والأشعة: ${c.labs}`,
-        c.prevTx && `- العلاجات السابقة وعدم الاستجابة لها: ${c.prevTx}`,
+        c.cultures && `- نتائج المزارع: ${c.cultures}`,
         `- الدواء المطلوب والمبرر الطبي: ${c.drug}`,
         c.dose && `- الجرعة وعدد المرات ومدة العلاج (كما كتبها الطبيب): ${c.dose}`
       ].filter(Boolean).join("\n");
@@ -971,8 +1460,12 @@
 
 المطلوب:
 1. اللغة: اكتب التقرير كاملاً بالعربية. ترجم التشخيصات وأسماء الحالات والمصطلحات الطبية إلى العربية، واذكر المصطلح الإنجليزي بين قوسين عند أول ذكر فقط، مثال: الربو الشعبي الحاد المستمر (Severe Persistent Asthma). اسم الدواء يُكتب بالعربية مع اسمه الإنجليزي بين قوسين.
-2. وصف الحالة: اشرح طبيعة المرض وخطورته عند الأطفال بشكل واضح ومختصر، والمضاعفات والمخاطر المعروفة طبياً إذا لم تتم السيطرة عليه (مثل تكرار الأزمات الحادة، ودخول الرعاية المركزة، والحاجة للتنفس الصناعي، والتأثير على النمو وجودة الحياة)، بما يتناسب مع التشخيص المذكور.
-3. المبررات المقنعة: ادعم الطلب بأسباب طبية حقيقية ومعروفة علمياً، مثل: لماذا يُعد هذا الدواء مناسباً لهذه الحالة تحديداً، وكيف يعمل باختصار، والفوائد المتوقعة منه (مثل تقليل الأزمات ومرات دخول المستشفى والحاجة للكورتيزون)، وأن عدم صرفه قد يعرّض الطفل لمخاطر أكبر وتكلفة علاجية أعلى على المدى الطويل. اربط هذه الأسباب ببيانات الحالة.
+2. وصف الحالة: اشرح طبيعة المرض وخطورته عند الأطفال بشكل واضح ومختصر، والمضاعفات والمخاطر المعروفة طبياً إذا لم تتم السيطرة عليه (مثل تكرار الأزمات الحادة، ودخول الرعاية المركزة، والحاجة للتنفس الصناعي، والتأثير على النمو وجودة الحياة)، بما يتناسب مع التشخيص المذكور. وإذا ذُكرت أعراض وعلامات المريض، فاعرضها بصياغة طبية عربية سلسة كجزء من وصف الحالة الإكلينيكية.
+3. المبررات المقنعة: ادعم الطلب بأسباب إكلينيكية حقيقية ومعروفة: لماذا يُعد هذا الدواء أو هذه التوليفة العلاجية هي الخيار الموصى به لهذه الحالة تحديداً، والفوائد المتوقعة منه، وأن عدم صرفه قد يعرّض الطفل لمخاطر أكبر (مثل تدهور الحالة أو الوفاة) وتكلفة علاجية أعلى. اربط هذه الأسباب ببيانات الحالة.
+   - ممنوع شرح الفارماكولوجي أو آلية عمل الدواء (مثل: يهاجم جدار الخلية، أو يسبب تحلل البكتيريا، أو يثبط تصنيع البروتين). ركّز بدلاً من ذلك على أن الدواء/التوليفة موصى بها لهذا الميكروب ونمط المقاومة أو لهذا التشخيص.
+   - في المضادات الحيوية: إذا ذُكرت نتائج مزارع، فاذكر الميكروب المسبب ونمط مقاومته وحساسيته، ووضّح أن العلاج المطلوب هو الموصى به لهذا النمط. أمثلة على الصياغة المطلوبة:
+     • "يُوصى باستخدام توليفة Colistin مع Tigecycline في حالات عدوى Klebsiella متعددة المقاومة (MDR) والمقاومة لمختلف المضادات الحيوية."
+     • "يُوصى باستخدام Ceftazidime-avibactam (Zavicefta) مع Aztreonam في حالات عدوى Klebsiella متعددة المقاومة المقاومة لمجموعة الكاربابينيم (Carbapenem-resistant)."
 4. الأمانة الطبية: المعلومات العامة عن المرض والدواء من المعرفة الطبية المعتمدة مسموحة ومطلوبة. أما المعلومات الخاصة بهذا المريض تحديداً (أرقام التحاليل، العلامات الحيوية، التواريخ، عدد مرات الدخول، العلاجات السابقة) فاستخدم منها فقط ما ورد في البيانات ولا تخترع أرقاماً أو أحداثاً غير مذكورة. إذا لم تُذكر معلومة فلا تذكرها ولا تترك فراغات.
 5. الجرعة: إذا كتب الطبيب الجرعة فاكتبها كما هي تماماً دون تعديل. إذا لم تُذكر فاكتب "بالجرعة المناسبة لعمر ووزن الطفل وفقاً للبروتوكول العلاجي المعتمد".
 6. لا تذكر أسماء مراجع أو دراسات بعينها؛ يمكنك الإشارة بشكل عام إلى "الإرشادات العلمية الدولية المعتمدة".
@@ -1005,12 +1498,13 @@ ${lines}`;
         unit: unitInput.value,
         patientName: val("ptName"),
         patientAge: arabicAge(),
-        weight: val("ptWeight"),
+        weight: parseFloat(val("ptWeight")) > 0 ? `${parseFloat(val("ptWeight"))} كجم` : "",
         admission: val("ptAdmission"),
         history: val("ptHistory"),
+        symptoms: val("ptSymptoms"),
         support: val("ptSupport"),
         labs: val("ptLabs"),
-        prevTx: val("ptPrevTx"),
+        cultures: val("ptCultures"),
         drug: val("ptDrug"),
         dose: val("ptDose")
       };
