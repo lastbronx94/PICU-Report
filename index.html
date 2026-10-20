@@ -691,7 +691,9 @@
     });
 
     // استرجاع مفتاح Gemini إن وجد
-    const savedGeminiKey = localStorage.getItem("picu_gemini_key");
+    // بعض المتصفحات (التصفح الخفي / إعدادات خصوصية صارمة) تمنع التخزين — لا نجعل ذلك يوقف الموقع
+    let savedGeminiKey = null;
+    try { savedGeminiKey = localStorage.getItem("picu_gemini_key"); } catch (e) {}
     if (savedGeminiKey) document.getElementById("geminiKey").value = savedGeminiKey;
 
     // رسائل خطأ مفهومة بدلاً من أكواد Firebase
@@ -1482,6 +1484,65 @@
 ${lines}`;
     }
 
+    // ===== الاتصال بـ Gemini مع إعادة المحاولة والنسخ الاحتياطية =====
+    // عند ازدحام الخدمة (503) نعيد المحاولة ثم ننتقل لنسخة أخرى؛ ولكل نسخة حد يومي مستقل
+    const GEMINI_MODELS = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest"];
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+    async function callGemini(prompt, apiKey, onStatus) {
+      let last = { kind: "other", msg: "" };
+      let attempt = 0;
+      for (let m = 0; m < GEMINI_MODELS.length; m++) {
+        for (let tryNo = 0; tryNo < 2; tryNo++) {
+          attempt++;
+          if (attempt > 1) {
+            onStatus(`الخدمة مزدحمة، جاري المحاولة مرة أخرى (${attempt})...`);
+            await sleep(tryNo === 0 ? 1000 : 2500);
+          }
+          let res, data;
+          try {
+            res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODELS[m]}:generateContent`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                // حرارة متوسطة = صياغة طبيعية ومقنعة مع الالتزام ببيانات الحالة
+                generationConfig: { temperature: 0.6 }
+              })
+            });
+            data = await res.json();
+          } catch (err) {
+            last = { kind: "network", msg: "" };
+            continue; // مشكلة إنترنت مؤقتة: نعيد المحاولة
+          }
+
+          const parts = data.candidates?.[0]?.content?.parts || [];
+          const text = parts.filter((p) => p.text && !p.thought).map((p) => p.text).join("").trim();
+          if (text) return { text };
+
+          const msg = data.error?.message || "";
+          const status = res.status;
+          if (/api key|API_KEY|unauthenticated/i.test(msg) || status === 401 || status === 403) {
+            return { kind: "key", msg }; // المفتاح نفسه خطأ: لا فائدة من التكرار
+          }
+          if (status === 429 || /quota|exhausted/i.test(msg)) {
+            last = { kind: "quota", msg };
+            break; // الحد اليومي لهذه النسخة انتهى: ننتقل للنسخة التالية
+          }
+          if (status === 404 || /not found|not supported/i.test(msg)) {
+            last = { kind: "other", msg };
+            break; // النسخة غير متاحة: ننتقل للتالية
+          }
+          if (status >= 500 || /overloaded|high demand|unavailable|try again/i.test(msg)) {
+            last = { kind: "busy", msg };
+            continue; // ازدحام مؤقت: نعيد المحاولة
+          }
+          return { kind: "other", msg }; // خطأ آخر (مثل طلب مرفوض): لا نكرر
+        }
+      }
+      return last;
+    }
+
     // توليد التقرير الطبي
     document.getElementById("btnGenerate").onclick = async () => {
       const unitInput = document.querySelector('input[name="ptUnit"]:checked');
@@ -1521,7 +1582,7 @@ ${lines}`;
         return;
       }
 
-      localStorage.setItem("picu_gemini_key", apiKey);
+      try { localStorage.setItem("picu_gemini_key", apiKey); } catch (e) {}
       output.value = "جاري صياغة التقرير الطبي للتأمين الصحي بالذكاء الاصطناعي...";
       output.readOnly = true;
       pendingReport = null;
@@ -1536,37 +1597,24 @@ ${lines}`;
       btn.innerHTML = '<span class="spinner"></span><span>جاري إعداد التقرير...</span>';
 
       try {
-        // gemini-1.5-flash تم إيقافه من Google، لذلك نستخدم أحدث نسخة Flash تلقائياً
-        const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: buildPrompt(c) }] }],
-            // حرارة متوسطة = صياغة طبيعية ومقنعة مع الالتزام ببيانات الحالة
-            generationConfig: { temperature: 0.6 }
-          })
+        const result = await callGemini(buildPrompt(c), apiKey, (note) => {
+          btn.innerHTML = `<span class="spinner"></span><span>${note}</span>`;
         });
-
-        const data = await res.json();
-        const parts = data.candidates?.[0]?.content?.parts || [];
-        const text = parts.filter((p) => p.text && !p.thought).map((p) => p.text).join("").trim();
-        if (text) {
-          output.value = text;
+        if (result.text) {
+          output.value = result.text;
           output.readOnly = false;
           pendingReport = c;
           btnSave.disabled = false;
           updateMissingNote();
           saveStatus.textContent = "راجع التقرير قبل الحفظ.";
         } else {
-          const msg = data.error?.message || "";
-          output.value = /api key|API_KEY|permission|unauthenticated/i.test(msg)
-            ? "المفتاح (Pro Key) غير صحيح أو غير مفعّل. يرجى التأكد منه والمحاولة مرة أخرى."
-            : /quota|exhausted|rate/i.test(msg)
-              ? "تم الوصول للحد اليومي المسموح للمفتاح (Pro Key). يرجى المحاولة لاحقاً."
-              : "تعذر إنشاء التقرير، يرجى المحاولة مرة أخرى." + (msg ? `\n(${msg})` : "");
+          output.value = {
+            key: "المفتاح (Pro Key) غير صحيح أو غير مفعّل. يرجى التأكد منه والمحاولة مرة أخرى.",
+            quota: "تم الوصول للحد اليومي المسموح للمفتاح (Pro Key). يرجى المحاولة لاحقاً أو غداً.",
+            busy: "خدمة الذكاء الاصطناعي مزدحمة جداً حالياً من جهة Google (ضغط مؤقت).\nحاولنا عدة مرات وبأكثر من نسخة دون نجاح. انتظر دقيقة ثم اضغط \"توليد تقرير التأمين الصحي\" مرة أخرى — بيانات المريض ما زالت موجودة في الخانات.",
+            network: "تعذر الاتصال بالخدمة، يرجى التأكد من الإنترنت والمحاولة مرة أخرى."
+          }[result.kind] || ("تعذر إنشاء التقرير، يرجى المحاولة مرة أخرى." + (result.msg ? `\n(${result.msg})` : ""));
         }
-      } catch (err) {
-        output.value = "تعذر الاتصال بالخدمة، يرجى التأكد من الإنترنت والمحاولة مرة أخرى.";
       } finally {
         btn.disabled = false;
         btn.innerHTML = btnHtml;
