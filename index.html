@@ -493,16 +493,6 @@
       <div class="hint">تُكتب الجرعة في التقرير كما أدخلتها تماماً دون تعديل.</div>
     </div>
 
-    <details class="settings" id="aiSettings">
-      <summary>
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/></svg>
-        Pro Key
-      </summary>
-      <div class="inner">
-        <input id="geminiKey" type="password" dir="ltr" autocomplete="off" placeholder="أدخل Pro Key">
-        <div class="hint">يُحفظ المفتاح على هذا الجهاز فقط.</div>
-      </div>
-    </details>
 
     <button id="btnGenerate" class="btn-success btn-lg">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>
@@ -612,7 +602,9 @@
 
   <!-- الأكواد البرمجية والربط مع Firebase و Gemini -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+    import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app-check.js";
+    import { getAI, getGenerativeModel, GoogleAIBackend, ThinkingLevel } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-ai.js";
     import { 
       getAuth, 
       signInWithEmailAndPassword, 
@@ -623,7 +615,7 @@
       EmailAuthProvider,
       reauthenticateWithCredential,
       updatePassword
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
     import { 
       getFirestore, 
       doc, 
@@ -639,7 +631,7 @@
       limit,
       where,
       serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
     // إعدادات Firebase الخاصة بمشروعك
     const firebaseConfig = {
@@ -651,9 +643,22 @@
       appId: "1:279946812428:web:a82e3a130a22dc3383e229"
     };
 
+    // مفتاح reCAPTCHA Enterprise الخاص بـ App Check (مفتاح موقع عام وليس سرياً).
+    // يُنشأ مرة واحدة من Google Cloud Console ويُسجَّل في Firebase > Security > App Check.
+    const RECAPTCHA_ENTERPRISE_KEY = "6LdCZPktAAAAANxs01EuaOM6Mu4jRDc_XefmNSmh";
+
     const app = initializeApp(firebaseConfig);
+    // App Check يتأكد أن طلبات الذكاء الاصطناعي قادمة من موقعنا فقط (إلزامي لـ AI Logic من 2 نوفمبر 2026)
+    if (RECAPTCHA_ENTERPRISE_KEY) {
+      initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_ENTERPRISE_KEY),
+        isTokenAutoRefreshEnabled: true
+      });
+    }
     const auth = getAuth(app);
     const db = getFirestore(app);
+    // Gemini عبر Firebase AI Logic — بدون مفاتيح للأطباء (المفتاح محفوظ لدى Google داخل مشروع Firebase)
+    const ai = getAI(app, { backend: new GoogleAIBackend() });
 
     const ADMIN_EMAIL = "admin@picu.com";
 
@@ -692,9 +697,8 @@
 
     // استرجاع مفتاح Gemini إن وجد
     // بعض المتصفحات (التصفح الخفي / إعدادات خصوصية صارمة) تمنع التخزين — لا نجعل ذلك يوقف الموقع
-    let savedGeminiKey = null;
-    try { savedGeminiKey = localStorage.getItem("picu_gemini_key"); } catch (e) {}
-    if (savedGeminiKey) document.getElementById("geminiKey").value = savedGeminiKey;
+    // لم نعد نحتاج مفتاح Pro Key: نحذف أي مفتاح قديم محفوظ على هذا الجهاز
+    try { localStorage.removeItem("picu_gemini_key"); } catch (e) {}
 
     // رسائل خطأ مفهومة بدلاً من أكواد Firebase
     function explainError(err) {
@@ -1484,60 +1488,66 @@
 ${lines}`;
     }
 
-    // ===== الاتصال بـ Gemini مع إعادة المحاولة والنسخ الاحتياطية =====
-    // عند ازدحام الخدمة (503) نعيد المحاولة ثم ننتقل لنسخة أخرى؛ ولكل نسخة حد يومي مستقل
-    const GEMINI_MODELS = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest"];
+    // ===== كتابة التقرير عبر Firebase AI Logic (بدون مفاتيح) =====
+    // الترتيب: أحدث Flash → Flash المستقر → Flash-Lite (الأسرع). لكل نسخة حد يومي مستقل.
+    // التفكير "منخفض" لأن صياغة التقرير لا تحتاج تفكيراً عميقاً، فيبدأ الكتابة أسرع.
+    const AI_MODELS = ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"].map((name) => ({
+      name,
+      model: getGenerativeModel(ai, {
+        model: name,
+        // حرارة متوسطة = صياغة طبيعية ومقنعة مع الالتزام ببيانات الحالة
+        generationConfig: { temperature: 0.6, thinkingConfig: { thinkingLevel: ThinkingLevel.LOW } }
+      })
+    }));
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-    async function callGemini(prompt, apiKey, onStatus) {
+    // تصنيف الخطأ القادم من Firebase AI (AIError: code + customErrorData.status)
+    function classifyAIError(err) {
+      const status = err?.customErrorData?.status;
+      const code = String(err?.code || "");
+      const msg = String(err?.message || "");
+      if (code.endsWith("api-not-enabled") || /genai config not found|has been deactivated/i.test(msg)) return { kind: "setup", msg };
+      if (status === 403 || /app ?check|PERMISSION_DENIED/i.test(msg)) return { kind: "setup", msg };
+      if (status === 429 || /quota|exhausted/i.test(msg)) return { kind: "quota", msg, next: true };
+      if (status === 404 || /not found|not supported/i.test(msg)) return { kind: "other", msg, next: true };
+      if (status >= 500 || /overloaded|high demand|unavailable|try again/i.test(msg)) return { kind: "busy", msg, retry: true };
+      if (!status && code.endsWith("fetch-error")) return { kind: "network", msg, retry: true };
+      return { kind: "other", msg };
+    }
+
+    // onText(fullTextSoFar) يُستدعى أثناء الكتابة لعرض التقرير كلمة بكلمة
+    async function writeReport(prompt, onStatus, onText) {
       let last = { kind: "other", msg: "" };
       let attempt = 0;
-      for (let m = 0; m < GEMINI_MODELS.length; m++) {
+      for (const m of AI_MODELS) {
         for (let tryNo = 0; tryNo < 2; tryNo++) {
           attempt++;
           if (attempt > 1) {
             onStatus(`الخدمة مزدحمة، جاري المحاولة مرة أخرى (${attempt})...`);
             await sleep(tryNo === 0 ? 1000 : 2500);
+            onStatus("جاري كتابة التقرير...");
           }
-          let res, data;
+          let text = "";
           try {
-            res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODELS[m]}:generateContent`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                // حرارة متوسطة = صياغة طبيعية ومقنعة مع الالتزام ببيانات الحالة
-                generationConfig: { temperature: 0.6 }
-              })
-            });
-            data = await res.json();
+            const result = await m.model.generateContentStream(prompt);
+            for await (const chunk of result.stream) {
+              let piece = "";
+              try { piece = chunk.text(); } catch (e) {}
+              if (piece) { text += piece; onText(text); }
+            }
+            if (text.trim()) return { text: text.trim() };
+            last = { kind: "other", msg: "empty" };
+            break; // رد فارغ: نجرب النسخة التالية
           } catch (err) {
-            last = { kind: "network", msg: "" };
-            continue; // مشكلة إنترنت مؤقتة: نعيد المحاولة
+            console.error(m.name, err);
+            if (text) onText(""); // توقف في منتصف الكتابة: نمسح الجزء الناقص ونعيد المحاولة
+            const e = classifyAIError(err);
+            last = e;
+            if (e.kind === "setup") return e; // مشكلة إعداد: لا فائدة من التكرار
+            if (e.next) break;                // حد يومي / نسخة غير متاحة: النسخة التالية
+            if (e.retry) continue;            // ازدحام أو انقطاع مؤقت: نعيد المحاولة
+            return e;
           }
-
-          const parts = data.candidates?.[0]?.content?.parts || [];
-          const text = parts.filter((p) => p.text && !p.thought).map((p) => p.text).join("").trim();
-          if (text) return { text };
-
-          const msg = data.error?.message || "";
-          const status = res.status;
-          if (/api key|API_KEY|unauthenticated/i.test(msg) || status === 401 || status === 403) {
-            return { kind: "key", msg }; // المفتاح نفسه خطأ: لا فائدة من التكرار
-          }
-          if (status === 429 || /quota|exhausted/i.test(msg)) {
-            last = { kind: "quota", msg };
-            break; // الحد اليومي لهذه النسخة انتهى: ننتقل للنسخة التالية
-          }
-          if (status === 404 || /not found|not supported/i.test(msg)) {
-            last = { kind: "other", msg };
-            break; // النسخة غير متاحة: ننتقل للتالية
-          }
-          if (status >= 500 || /overloaded|high demand|unavailable|try again/i.test(msg)) {
-            last = { kind: "busy", msg };
-            continue; // ازدحام مؤقت: نعيد المحاولة
-          }
-          return { kind: "other", msg }; // خطأ آخر (مثل طلب مرفوض): لا نكرر
         }
       }
       return last;
@@ -1569,21 +1579,13 @@ ${lines}`;
         drug: val("ptDrug"),
         dose: val("ptDose")
       };
-      const apiKey = val("geminiKey");
-
       if (!c.patientName || !c.patientAge || !c.history || !c.drug) {
         alert("يرجى ملء الحقول الأساسية: اسم المريض، السن (سنة أو شهر أو يوم)، التشخيص، والدواء المطلوب.");
         return;
       }
-      if (!apiKey) {
-        document.getElementById("aiSettings").open = true;
-        document.getElementById("geminiKey").focus();
-        alert("يرجى إدخال المفتاح (Pro Key).");
-        return;
-      }
 
-      try { localStorage.setItem("picu_gemini_key", apiKey); } catch (e) {}
-      output.value = "جاري صياغة التقرير الطبي للتأمين الصحي بالذكاء الاصطناعي...";
+      output.value = "";
+      output.placeholder = "جاري صياغة التقرير الطبي للتأمين الصحي... سيظهر النص هنا أثناء كتابته.";
       output.readOnly = true;
       pendingReport = null;
       btnSave.disabled = true;
@@ -1594,12 +1596,13 @@ ${lines}`;
       const btn = document.getElementById("btnGenerate");
       const btnHtml = btn.innerHTML;
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span><span>جاري إعداد التقرير...</span>';
+      btn.innerHTML = '<span class="spinner"></span><span>جاري كتابة التقرير...</span>';
 
       try {
-        const result = await callGemini(buildPrompt(c), apiKey, (note) => {
-          btn.innerHTML = `<span class="spinner"></span><span>${note}</span>`;
-        });
+        const result = await writeReport(buildPrompt(c),
+          (note) => { btn.innerHTML = `<span class="spinner"></span><span>${note}</span>`; },
+          (soFar) => { output.value = soFar; output.scrollTop = output.scrollHeight; });
+        output.placeholder = "سيظهر التقرير الطبي هنا بعد التوليد...";
         if (result.text) {
           output.value = result.text;
           output.readOnly = false;
@@ -1609,8 +1612,8 @@ ${lines}`;
           saveStatus.textContent = "راجع التقرير قبل الحفظ.";
         } else {
           output.value = {
-            key: "المفتاح (Pro Key) غير صحيح أو غير مفعّل. يرجى التأكد منه والمحاولة مرة أخرى.",
-            quota: "تم الوصول للحد اليومي المسموح للمفتاح (Pro Key). يرجى المحاولة لاحقاً أو غداً.",
+            setup: "خدمة كتابة التقارير تحتاج إعداداً من إدارة الموقع (Firebase AI Logic / App Check).\nيرجى إبلاغ مسؤول الموقع.",
+            quota: "تم الوصول للحد اليومي المجاني لخدمة كتابة التقارير.\nيتجدد الحد يومياً حوالي الساعة 10–11 صباحاً بتوقيت مصر. يرجى المحاولة لاحقاً.",
             busy: "خدمة الذكاء الاصطناعي مزدحمة جداً حالياً من جهة Google (ضغط مؤقت).\nحاولنا عدة مرات وبأكثر من نسخة دون نجاح. انتظر دقيقة ثم اضغط \"توليد تقرير التأمين الصحي\" مرة أخرى — بيانات المريض ما زالت موجودة في الخانات.",
             network: "تعذر الاتصال بالخدمة، يرجى التأكد من الإنترنت والمحاولة مرة أخرى."
           }[result.kind] || ("تعذر إنشاء التقرير، يرجى المحاولة مرة أخرى." + (result.msg ? `\n(${result.msg})` : ""));
